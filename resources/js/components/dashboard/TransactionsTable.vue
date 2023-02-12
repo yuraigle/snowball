@@ -1,0 +1,72 @@
+<template>
+    <div class="my-4">
+        <button type="button" class="btn btn-sm btn-outline-primary"
+                @click="selected=null"
+                data-bs-toggle="modal" data-bs-target="#new_tx_modal">
+            <i class="fa-solid fa-fw fa-plus"></i> Добавить сделку
+        </button>
+
+        <table class="table mt-2">
+            <thead>
+            <tr>
+                <th>Операция</th>
+                <th>Дата</th>
+                <th>Количество</th>
+                <th>Цена</th>
+                <th>Комиссия</th>
+                <th>Сумма</th>
+                <th>Прибыль</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="tx in transactions">
+                <td>
+                    <span v-if="tx['deal_type'] === 0" class="text-success">Покупка</span>
+                    <span v-else>Продажа</span>
+                </td>
+                <td>{{ tx['deal_date'] }}</td>
+                <td>{{ Math.round(tx['amount']) }}</td>
+                <td>{{ formatPrice(tx['price']) }}</td>
+                <td>{{ formatPrice(tx['commission']) }}</td>
+                <td>{{ formatPrice(tx['amount'] * tx['price'] + 1 * tx['commission']) }}</td>
+                <td>{{ formatPrice(calcProfit(tx['amount'], tx['price'], tx['commission'])) }}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-link" type="button" title="Редактировать"
+                            @click="selected=tx['id']"
+                            data-bs-toggle="modal" data-bs-target="#new_tx_modal">
+                        <i class="fa-regular fw fa-pen-to-square"></i>
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <transaction-form :selected="selected"></transaction-form>
+    </div>
+</template>
+
+<script>
+export default {
+    data() {
+        return {
+            transactions: window.transactions,
+            selected: null,
+        }
+    },
+
+    methods: {
+        formatPrice(x, c) {
+            let fmt = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'RUB'});
+            if (c === 'USD') {
+                fmt = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'})
+            }
+            return fmt.format(x);
+        },
+
+        calcProfit(a, p, c) {
+            return a * (window.asset_price - p) - c;
+        }
+    }
+}
+</script>

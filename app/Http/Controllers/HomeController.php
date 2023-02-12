@@ -18,4 +18,9 @@ class HomeController extends BaseController
     {
         return view("home.welcome", []);
     }
+
+    public function terms(): Factory|View|Application
+    {
+        return view("home.terms", []);
+    }
 }

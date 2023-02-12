@@ -1,9 +1,5 @@
 @extends('layouts.base')
 
 @section('content')
-    Welcome!
-
-    <div id="app">
-        <example-component></example-component>
-    </div>
+    <h1 class="h3">Добро пожаловать!</h1>
 @endsection

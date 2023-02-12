@@ -52,7 +52,7 @@
     </div>
 </nav>
 
-<main class="container mt-2">
+<main class="container mt-3">
     @yield('content')
 </main>
 
@@ -61,5 +61,6 @@
         crossorigin="anonymous"></script>
 @vite(['resources/js/app.js'])
 <script src="https://kit.fontawesome.com/e0449c5598.js" crossorigin="anonymous"></script>
+@yield('scripts')
 </body>
 </html>

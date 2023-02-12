@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::get('/', [HomeController::class, 'welcome'])->name('welcome');
+Route::get('/terms', [HomeController::class, 'terms'])->name('terms');
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'loginPost']);
@@ -29,5 +30,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware('auth')
     ->name('dashboard');
 
-Route::post('/dashboard', [DashboardController::class, 'editCategory'])
-    ->middleware('auth');
+Route::get('/asset/{ticker}', [DashboardController::class, 'asset'])
+    ->middleware('auth')
+    ->name('asset');
+
+Route::post('/transaction', [DashboardController::class, 'transaction']);
