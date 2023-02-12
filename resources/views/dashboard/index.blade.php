@@ -10,6 +10,6 @@
 
 @section('scripts')
     <script>
-        window.categories = @json($categories);
+        window.stats = @json($stats);
     </script>
 @endsection

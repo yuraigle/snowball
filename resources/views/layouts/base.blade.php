@@ -35,7 +35,8 @@
                         </a>
                     </li>
                     <li class="nav-item ms-1">
-                        <a class="nav-link btn btn-sm btn-outline-light" href="{{ route('logout') }}">
+                        <a class="nav-link btn btn-sm btn-outline-light"
+                           href="{{ route('logout') }}" title="Выход">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
                     </li>

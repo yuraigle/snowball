@@ -22,13 +22,49 @@ class DashboardController extends BaseController
 
     public function index(): Factory|View|Application
     {
-        $categories = DB::select("
-select uc.id, uc.parent_id, ifnull(uc.name, a.name) as name, a.ticker, uc.target_weight from `user_categories` uc
+        $stats = DB::select("
+select
+    uc.id,
+    uc.parent_id,
+    ifnull(uc.name, a.name) as name,
+    a.ticker,
+    uc.target_weight,
+    a.price,
+    a.icon,
+    sum(`amount`) as cnt,
+    sum(`amount` * uh.price) as ttl_spent,
+    sum(`amount`) * max(a.price) as ttl_now,
+    sum(`amount` * uh.price) / sum(`amount`) as average
+from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
-where `user_id` = ?
-order by uc.parent_id, uc.target_weight desc", [Auth::id()]);
+    left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
+where uc.`user_id` = ?
+group by uc.id, uc.parent_id, uc.name, uc.target_weight, a.name, a.ticker, a.price, a.icon
+order by uc.parent_id, uc.target_weight desc
+", [Auth::id()]);
 
-        return view("dashboard.index", ['categories' => $categories]);
+        $categoriesTotal = [];
+
+        foreach ($stats as $stat) {
+            if ($stat->parent_id) {
+                if (!isset($categoriesTotal[$stat->parent_id])) {
+                    $categoriesTotal[$stat->parent_id] = ['ttl_now' => 0, 'ttl_spent' => 0];
+                }
+                $categoriesTotal[$stat->parent_id]['ttl_now'] += $stat->ttl_now;
+                $categoriesTotal[$stat->parent_id]['ttl_spent'] += $stat->ttl_spent;
+            }
+        }
+
+        foreach ($stats as $stat) {
+            if (!$stat->ttl_spent && !empty($categoriesTotal[$stat->id])) {
+                $stat->ttl_spent = $categoriesTotal[$stat->id]['ttl_spent'];
+                $stat->ttl_now = $categoriesTotal[$stat->id]['ttl_now'];
+            }
+        }
+
+        // TODO пересчёт не будет работать при вложенности >1
+
+        return view("dashboard.index", compact('stats'));
     }
 
     public function asset($ticker): Factory|View|Application
@@ -44,9 +80,9 @@ order by uc.parent_id, uc.target_weight desc", [Auth::id()]);
         $tx = DB::select("select * from `user_holdings` where `user_id`=? and `asset_id`=? order by deal_date desc",
             [Auth::id(), $asset->id]);
 
-        $stats = DB::select("select sum(case when deal_type = 0 then `amount` else `amount` * -1 end) as cnt,
-    sum(amount * h.price) as ttl_spent
-from `user_holdings` h left join `assets` a on a.id = h.id
+        $stats = DB::select("
+select sum(`amount`) as cnt, sum(amount * h.price) as ttl_spent
+from `user_holdings` h left join `assets` a on a.id = h.asset_id
 where user_id = ? and asset_id = ?", [Auth::id(), $asset->id]);
 
         return view("dashboard.asset", [
@@ -81,6 +117,9 @@ where user_id = ? and asset_id = ?", [Auth::id(), $asset->id]);
         $price = floatval($req->post('price'));
         $currency = $req->post('currency', 'USD');
         $commission = $req->post('commission', 0);
+        if ($type == 1) {
+            $amount *= -1;
+        }
 
         if ($id) {
             DB::update("update `user_holdings` set deal_date=?, deal_type=?, amount=?, price=?,
@@ -88,7 +127,7 @@ where user_id = ? and asset_id = ?", [Auth::id(), $asset->id]);
                 [$date, $type, $amount, $price, $currency, $commission, $id]);
         } else {
             DB::insert("insert into `user_holdings` (user_id, asset_id, deal_type, deal_date, amount, price,
-                             currency, commission) values (?,?,?,?,?,?,?)",
+                             currency, commission) values (?,?,?,?,?,?,?,?)",
                 [$uid, $aid, $type, $date, $amount, $price, $currency, $commission]);
         }
 

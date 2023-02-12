@@ -3,7 +3,7 @@
 @section('content')
     <div class="d-flex">
         <div class="pt-1 pe-2">
-            <img src="/layout/asset-{{ $asset->ticker }}.svg" width="48" alt="{{ $asset->ticker }}"/>
+            <img src="/layout/{{ $asset->icon }}" width="48" alt="{{ $asset->ticker }}"/>
         </div>
         <div class="p-0">
             <h1 class="h3 p-0 m-0">{{ $asset->name }}</h1>
@@ -29,7 +29,7 @@
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Средняя цена:</span>
-                    <span class="float-end">{{ number_format($stats->ttl_spent / $stats->cnt) }} ₽</span>
+                    <span class="float-end">{{ number_format($stats->ttl_spent / $stats->cnt, 2) }} ₽</span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Доля:</span>
