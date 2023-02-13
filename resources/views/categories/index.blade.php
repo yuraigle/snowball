@@ -1,10 +1,10 @@
 @extends('layouts.base')
 
 @section('content')
-    <h1 class="h3">Портфель</h1>
+    <h1 class="h3">Категории</h1>
 
     <div id="app">
-        <dashboard-page></dashboard-page>
+        <categories-table></categories-table>
     </div>
 @endsection
 

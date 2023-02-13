@@ -17,15 +17,6 @@
             <img src="/symbol.svg" alt="Logo" width="48" height="48" class="d-inline-block"/>
         </a>
 
-        <ul class="navbar-nav me-auto">
-            <li class="nav-item ms-1">
-                <a class="nav-link btn btn-sm btn-outline-light {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                   href="{{ route('dashboard') }}">
-                    Главная
-                </a>
-            </li>
-        </ul>
-
         <div class="navbar-expand">
             <ul class="navbar-nav">
                 @auth

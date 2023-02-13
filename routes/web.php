@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoriesController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,23 +16,16 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::get('/', [HomeController::class, 'welcome'])->name('welcome');
+Route::get('/welcome', [HomeController::class, 'welcome'])->name('welcome');
 Route::get('/terms', [HomeController::class, 'terms'])->name('terms');
 
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'loginPost']);
-
 Route::get('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/register', [AuthController::class, 'registerPost']);
-
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware('auth')
-    ->name('dashboard');
-
-Route::get('/asset/{ticker}', [DashboardController::class, 'asset'])
-    ->middleware('auth')
-    ->name('asset');
-
-Route::post('/transaction', [DashboardController::class, 'transaction']);
+Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name('home');
+Route::get('/asset/{ticker}', [DashboardController::class, 'asset'])->middleware('auth');
+Route::post('/transaction', [DashboardController::class, 'transaction'])->middleware('auth');
+Route::get('/categories', [CategoriesController::class, 'index'])->middleware('auth');

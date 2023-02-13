@@ -10,7 +10,7 @@
                         <span v-if="parent" role="button" @click="parent=null">
                             <i class="fa-solid fa-fw fa-arrow-left"></i> Назад
                         </span>
-                        <a v-else href="#" class="text-secondary text-decoration-none">
+                        <a v-else href="/categories" class="text-secondary text-decoration-none">
                             <i class="fa-regular fa-fw fa-edit"></i> Редактировать
                         </a>
                     </th>
