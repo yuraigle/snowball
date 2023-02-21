@@ -1,0 +1,121 @@
+<template>
+    <tr>
+        <td style="width: 30px">
+            <template v-if="!c['ticker']">
+                <button v-if="c['opened']" class="btn btn-link text-secondary px-1" @click="c['opened'] = false">
+                    <i class="fa fa-fw fa-chevron-down"></i>
+                </button>
+                <button v-else class="btn btn-link text-secondary px-1" @click="c['opened'] = true">
+                    <i class="fa fa-fw fa-chevron-right"></i>
+                </button>
+            </template>
+        </td>
+        <td class="c_name">
+            <div class="spacer" :style="{ display: 'inline-block', width: `${level * 32}px`}">&nbsp;</div>
+            <template v-if="!c['ticker']">
+                <img
+                    class="px-1"
+                    src="/layout/pie-chart.svg"
+                    :alt="c['name']"
+                    width="32"
+                    draggable="true"
+                    @dragstart="onDragStart"
+                />
+                <input type="text" class="form-control" v-model="c['name']" @input="onChange()">
+            </template>
+            <template v-else>
+                <img
+                    class="px-1"
+                    :src="`/layout/asset-${c['ticker']}.png`"
+                    :alt="c['name']"
+                    width="32"
+                    draggable="true"
+                    @dragstart="onDragStart"
+                />
+                <span style="margin-left: 13px">{{ c['name'] }}</span>
+            </template>
+        </td>
+        <td class="c_weight">
+            <input type="text" class="form-control" v-model="c['target_weight']" @input="onChange()">
+        </td>
+        <td class="text-end edits" style="width: 30px">
+            <button
+                class="btn btn-link text-dark opacity-50 px-2"
+                type="button"
+                :title="`Удалить ${c['ticker'] ? 'актив' : 'категорию'}`"
+                @click="$emit('remove')"
+            >
+                <i class="fa-solid fa-fw fa-xmark"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+<script>
+export default {
+    props: ['cat', 'level'],
+    emits: ['update:modelValue', 'remove'],
+
+    data() {
+        return {
+            c: this.cat,
+        }
+    },
+
+    methods: {
+        onChange() {
+            this.$emit('update:modelValue', this.c)
+        },
+        onDragStart(e) {
+            e.dataTransfer.clearData();
+            e.dataTransfer.setData('text/plain', this.c['id']);
+        }
+    }
+
+}
+</script>
+
+
+<style scoped>
+tr {
+    height: 50px;
+}
+
+.edits > button {
+    visibility: hidden;
+}
+
+tr:hover .edits > button {
+    visibility: visible;
+}
+
+.c_weight > input {
+    width: 75px;
+    text-align: right;
+    background: transparent;
+    border: 1px solid #fff;
+}
+
+.c_weight > input:hover, .c_weight > input:active, .c_weight > input:focus {
+    background: #edf1f5;
+    border: 1px solid #dee2e6;
+}
+
+.c_name > input {
+    width: 250px;
+    display: inline-block;
+    background: transparent;
+    border: 1px solid #fff;
+}
+
+.c_name > input:hover, .c_name > input:active, .c_name > input:focus {
+    background: #edf1f5;
+    border: 1px solid #dee2e6;
+}
+
+.c_name > img {
+    cursor: pointer;
+    padding: 0 0 5px 0;
+}
+
+</style>

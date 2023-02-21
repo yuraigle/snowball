@@ -27,7 +27,6 @@ CREATE TABLE `assets`
     `price`      decimal(20, 6)        DEFAULT NULL,
     `currency`   varchar(3)   NOT NULL DEFAULT 'USD',
     `updated_at` datetime              DEFAULT NULL,
-    `upd_url`    varchar(250)          DEFAULT NULL,
     `icon`       varchar(20)           DEFAULT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `IX_ASSETS_TICKER_UNIQUE` (`ticker`) USING BTREE

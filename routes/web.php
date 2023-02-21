@@ -29,3 +29,5 @@ Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name
 Route::get('/asset/{ticker}', [DashboardController::class, 'asset'])->middleware('auth');
 Route::post('/transaction', [DashboardController::class, 'transaction'])->middleware('auth');
 Route::get('/categories', [CategoriesController::class, 'index'])->middleware('auth');
+
+Route::post('/categories/update', [CategoriesController::class, 'update'])->middleware('auth');

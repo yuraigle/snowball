@@ -30,41 +30,57 @@ select
     a.ticker,
     uc.target_weight,
     a.price,
-    a.icon,
     sum(`amount`) as cnt,
     sum(`amount` * uh.price) as ttl_spent,
     sum(`amount`) * max(a.price) as ttl_now,
-    sum(`amount` * uh.price) / sum(`amount`) as average
+    ifnull(uc.ord, 0) as ord
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
     left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
 where uc.`user_id` = ?
-group by uc.id, uc.parent_id, uc.name, uc.target_weight, a.name, a.ticker, a.price, a.icon
-order by uc.parent_id, uc.target_weight desc
+group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, a.name, a.ticker, a.price
 ", [Auth::id()]);
 
-        $categoriesTotal = [];
-
-        foreach ($stats as $stat) {
-            if ($stat->parent_id) {
-                if (!isset($categoriesTotal[$stat->parent_id])) {
-                    $categoriesTotal[$stat->parent_id] = ['ttl_now' => 0, 'ttl_spent' => 0];
-                }
-                $categoriesTotal[$stat->parent_id]['ttl_now'] += $stat->ttl_now;
-                $categoriesTotal[$stat->parent_id]['ttl_spent'] += $stat->ttl_spent;
-            }
-        }
-
-        foreach ($stats as $stat) {
-            if (!$stat->ttl_spent && !empty($categoriesTotal[$stat->id])) {
-                $stat->ttl_spent = $categoriesTotal[$stat->id]['ttl_spent'];
-                $stat->ttl_now = $categoriesTotal[$stat->id]['ttl_now'];
-            }
+        foreach ($stats as $row) {
+            $row->ttl_spent = $this->calcTotalSpent($stats, $row->id);
+            $row->ttl_now = $this->calcTotalNow($stats, $row->id);
         }
 
         // TODO пересчёт не будет работать при вложенности >1
 
         return view("dashboard.index", compact('stats'));
+    }
+
+    private function calcTotalSpent($stats, $id): float
+    {
+        $totalSpent = 0;
+
+        foreach ($stats as $row) {
+            if ($row->id == $id && $row->ticker) {
+                $totalSpent += $row->ttl_spent ?: 0;
+            }
+            if ($row->parent_id == $id) {
+                $totalSpent += $this->calcTotalSpent($stats, $row->id) ?: 0;
+            }
+        }
+
+        return $totalSpent;
+    }
+
+    private function calcTotalNow($stats, $id): float
+    {
+        $totalNow = 0;
+
+        foreach ($stats as $row) {
+            if ($row->id == $id && $row->ticker) {
+                $totalNow += $row->ttl_now ?: 0;
+            }
+            if ($row->parent_id == $id) {
+                $totalNow += $this->calcTotalNow($stats, $row->id) ?: 0;
+            }
+        }
+
+        return $totalNow;
     }
 
     public function asset($ticker): Factory|View|Application

@@ -1,177 +1,181 @@
 <template>
     <table class="border small" style="width: 500px">
-        <template v-for="c0 in childrenFor(null)">
-            <tr class="border-bottom">
-                <td>
-                    <div class="drag ps-3 pe-1" draggable="true" @dragstart="dragStart(c0, $event)"
-                         :id="'row_' + c0['id']">
-                        <i class="fa-solid fa-grip-vertical"></i>
-                    </div>
-                </td>
-                <td v-if="c0['ticker']" class="c_name" style="padding-left: 10px">
-                    <img :src="`/layout/${c0['icon']}`" alt="" width="32" class="me-3"/>
-                    {{ c0['name'] }}
-                </td>
-                <td v-else class="c_name" style="padding-left: 10px">
-                    <img src="/layout/pie-chart.svg" alt="" width="32" class="me-2"/>
-                    <input v-model="names[c0['id']]" type="text" class="form-control">
-                </td>
-                <td class="c_weight">
-                    <input type="text" v-model="weights[c0['id']]" class="form-control">
-                </td>
-                <td class="text-end edits" style="width: 50px">
-                    <button class="btn btn-link px-2">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </td>
-            </tr>
-            <tr class="drop-area"
-                :class="{ 'drag-over': dropAreaShown === c0['id'] }"
-                @dragover.prevent
-                @dragenter="dropAreaShown = c0['id']"
-                @dragleave="dropAreaShown = null"
-                @drop="dragFinish(c0, $event)"
-            >
-                <td colspan="4"></td>
-            </tr>
-            <template v-for="c1 in childrenFor(c0['id'])">
-                <tr class="border-bottom">
-                    <td>
-                        <div class="drag ps-3 pe-1" draggable="true" @dragstart="dragStart(c0, $event)">
-                            <i class="fa-solid fa-grip-vertical"></i>
-                        </div>
-                    </td>
-                    <td v-if="c1['ticker']" class="c_name" style="padding-left: 30px">
-                        <img :src="`/layout/${c1['icon']}`" alt="" width="32" class="me-3"/>
-                        {{ c1['name'] }}
-                    </td>
-                    <td v-else class="c_name" style="padding-left: 30px">
-                        <img src="/layout/pie-chart.svg" alt="" width="32" class="me-2"/>
-                        <input v-model="names[c1['id']]" type="text" class="form-control">
-                    </td>
-                    <td class="c_weight">
-                        <input type="text" v-model="weights[c1['id']]" class="form-control">
-                    </td>
-                    <td class="text-end edits" style="width: 50px">
-                        <button class="btn btn-link px-2">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr class="drop-area"
-                    :class="{ 'drag-over': dropAreaShown === c1['id'] }"
-                    @dragover.prevent
-                    @dragenter="dropAreaShown = c1['id']"
-                    @dragleave="dropAreaShown = null"
-                    @drop="dragFinish(c1, $event)"
-                >
-                    <td colspan="4"></td>
-                </tr>
+        <template v-for="c0 in childrenFor(null)" :key="c0.id">
+            <CategoriesRow :cat="c0" :level="0" @remove="onDeleteRow(c0.id)"/>
+            <DropAreaRow :id="c0['id']" @dropped="onDrop"></DropAreaRow>
+
+            <template v-if="c0['opened']" v-for="c1 in childrenFor(c0.id)" :key="c1.id">
+                <CategoriesRow :cat="c1" :level="1" @remove="onDeleteRow(c1.id)"/>
+                <DropAreaRow :id="c1['id']" @dropped="onDrop"></DropAreaRow>
+
+                <template v-if="c1['opened']" v-for="c2 in childrenFor(c1.id)" :key="c2.id">
+                    <CategoriesRow :cat="c2" :level="2" @remove="onDeleteRow(c2.id)"/>
+                    <DropAreaRow :id="c2['id']" @dropped="onDrop"></DropAreaRow>
+                </template>
             </template>
         </template>
-        <tr>
-            <td colspan="2">
-                <button class="btn btn-outline-primary ms-2">
-                    <i class="fa-solid fa-check"></i>
-                    Сохранить
-                </button>
 
-                <button class="btn btn-outline-secondary ms-2">
-                    <i class="fa-solid fa-xmark"></i>
-                    Отмена
+        <tr class="border-bottom" v-if="addRowShown">
+            <td class="c_name" colspan="2">
+                <img class="ms-3 me-4 px-1" src="/layout/pie-chart.svg" alt="" width="32"/>
+                <input type="text" class="form-control" v-model="addRowName" :class="{ 'is-invalid': addRowNameError }">
+            </td>
+            <td class="c_weight">
+                <input type="text" class="form-control" v-model="addRowTargetWeight" :class="{ 'is-invalid': addRowTargetWeightError }"/>
+            </td>
+            <td>
+                <button
+                    class="btn btn-link text-success p-0"
+                    type="button"
+                    title="Сохранить"
+                    @click="onAddRow"
+                >
+                    <i class="fa-solid fa-fw fa-check"></i>
+                </button>
+                <button
+                    class="btn btn-link text-secondary p-0"
+                    type="button"
+                    title="Отменить"
+                    @click="addRowShown = false"
+                >
+                    <i class="fa-solid fa-fw fa-xmark"></i>
                 </button>
             </td>
-            <td colspan="2" class="text-end">
-                <button class="btn btn-link px-2">
-                    <i class="fa-solid fa-plus"></i>
+        </tr>
+
+        <tr class="bg-secondary bg-opacity-10 bg-gradient">
+            <td colspan="2" class="ps-2 py-2">
+                <button class="btn btn-outline-primary ms-2" @click="onSubmit">
+                    <i class="fa-solid fa-check"></i> Сохранить
                 </button>
-                <button class="btn btn-link px-2">
-                    <i class="fa-solid fa-folder-plus"></i>
+                <a class="btn btn-outline-secondary ms-2" href="/categories">
+                    <i class="fa-solid fa-xmark"></i> Отмена
+                </a>
+            </td>
+            <td colspan="2" class="text-end pe-2">
+                <button
+                    v-if="!addRowShown"
+                    class="btn btn-link px-2"
+                    title="Добавить актив или категорию"
+                    @click="showAddRow"
+                >
+                    <i class="fa-solid fa-fw fa-plus"></i>
                 </button>
             </td>
         </tr>
     </table>
+
+    <p class="text-muted small mt-4">Перетяните актив за иконку в нужную категорию</p>
 </template>
 
 <script>
+import CategoriesRow from "./CategoriesRow.vue";
+import DropAreaRow from "./DropAreaRow.vue";
+
 export default {
+    components: {DropAreaRow, CategoriesRow},
+
     data() {
         return {
             stats: window.stats,
-            weights: {},
-            names: {},
-            dropAreaShown: null,
+            addRowShown: false,
+            addRowName: '',
+            addRowTargetWeight: '0.00',
+            addRowNameError: false,
+            addRowTargetWeightError: false,
         }
     },
-    mounted() {
-        window.stats.forEach(c => {
-            this.weights[c['id']] = c['target_weight'];
-            this.names[c['id']] = c['name'];
-        });
-    },
+
     methods: {
         childrenFor(parentId) {
-            return this.stats.filter(c => c['parent_id'] === parentId);
-        },
-        dragStart(c, ev) {
-            console.log(c);
-            console.log('drag-start');
-        },
-        dragFinish(c, ev) {
-            this.dropAreaShown = null
+            return this.stats
+                .filter(c => c['parent_id'] === parentId)
+                .sort((c1, c2) => c1['ord'] - c2['ord'] || c1['id'] - c2['id'])
         },
 
+        onDrop(v) {
+            const a = this.stats.filter(c => +c.id === +v.transfer)[0];
+            const b = this.stats.filter(c => +c.id === +v.to)[0];
+            a['parent_id'] = b['opened'] ? b['id'] : b['parent_id'];
 
+            let i = 0;
+            this.childrenFor(b['parent_id']).forEach(c => {
+                if (+c.id !== +a.id) {
+                    c.ord = ++i * 2;
+                }
+            })
+            a.ord = b.ord + 1;
+        },
+
+        showAddRow() {
+            this.addRowName = '';
+            this.addRowTargetWeight = '0.00';
+            this.addRowNameError = false;
+            this.addRowTargetWeightError = false;
+            this.addRowShown = true;
+        },
+
+        onAddRow() {
+            this.addRowNameError = !this.addRowName;
+            this.addRowTargetWeightError = !this.addRowTargetWeight
+                .match(/(^100(\.0{1,2})?$)|(^([1-9]([0-9])?|0)(\.[0-9]{1,2})?$)$/);
+
+            if (this.addRowNameError && this.addRowTargetWeightError) {
+                return;
+            }
+
+            this.stats.push({
+                aid: null,
+                ticker: null,
+                icon: 'pie-chart.svg',
+                parent_id: null,
+                name: this.addRowName,
+                target_weight: this.addRowTargetWeight,
+                ord: 999,
+            });
+
+            this.addRowName = '';
+            this.addRowTargetWeight = '0.00';
+            this.addRowShown = false;
+        },
+
+        onDeleteRow(id) {
+            for (let i = 0; i < this.stats.length; i++) {
+                if (this.stats[i].id === id) {
+                    this.stats.splice(i, 1);
+                    i--;
+                }
+            }
+        },
+
+        onSubmit() {
+            axios.post('/categories/update', this.stats)
+                .then(() => window.location.reload())
+                .catch(err => {
+                    console.error(err);
+                });
+        },
     }
 }
 </script>
 
-<style scoped>
-tr {
-    height: 49px;
-}
-
-.edits > button {
-    display: none;
-}
-
-tr:hover .edits > button {
-    display: inline-block;
-}
-
-.c_weight > input {
-    width: 75px;
-    text-align: right;
-    background: transparent;
-    border: 1px solid #fff;
-}
-
-.c_weight > input:hover, .c_weight > input:active, .c_weight > input:focus {
-    background: #edf1f5;
-    border: 1px solid #dee2e6;
+<style>
+.c_name > img {
+    padding: 0 0 5px 0;
 }
 
 .c_name > input {
     width: 250px;
     display: inline-block;
-    background: transparent;
-    border: 1px solid #fff;
-}
-
-.c_name > input:hover, .c_name > input:active, .c_name > input:focus {
     background: #edf1f5;
     border: 1px solid #dee2e6;
 }
 
-.drag {
-    cursor: grab;
+.c_weight > input {
+    width: 75px;
+    background: #edf1f5;
+    border: 1px solid #dee2e6;
+    text-align: right;
 }
 
-.drop-area {
-    height: 3px !important;
-}
-
-.drop-area.drag-over {
-    background: #3f8db9;
-}
 </style>
