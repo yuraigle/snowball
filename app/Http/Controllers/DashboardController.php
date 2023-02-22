@@ -29,6 +29,7 @@ select
     ifnull(uc.name, a.name) as name,
     a.ticker,
     uc.target_weight,
+    uc.color,
     a.price,
     sum(`amount`) as cnt,
     sum(`amount` * uh.price) as ttl_spent,
@@ -38,7 +39,7 @@ from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
     left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
 where uc.`user_id` = ?
-group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, a.name, a.ticker, a.price
+group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.name, a.ticker, a.price
 ", [Auth::id()]);
 
         foreach ($stats as $row) {

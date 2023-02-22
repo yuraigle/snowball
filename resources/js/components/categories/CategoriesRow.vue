@@ -12,6 +12,9 @@
         </td>
         <td class="c_name">
             <div class="spacer" :style="{ display: 'inline-block', width: `${level * 32}px`}">&nbsp;</div>
+
+            <input type="color" class="color_picker" v-model="c['color']" />
+
             <template v-if="!c['ticker']">
                 <img
                     class="px-1"
@@ -59,6 +62,13 @@ export default {
     data() {
         return {
             c: this.cat,
+        }
+    },
+
+    beforeMount() {
+        if (!this.c['color']) {
+            this.c['color'] = "#" + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0")
+            this.$emit('update:modelValue', this.c);
         }
     },
 
@@ -116,6 +126,13 @@ tr:hover .edits > button {
 .c_name > img {
     cursor: pointer;
     padding: 0 0 5px 0;
+}
+
+.color_picker {
+    cursor: pointer;
+    width: 12px !important;
+    height: 32px;
+    vertical-align: middle;
 }
 
 </style>

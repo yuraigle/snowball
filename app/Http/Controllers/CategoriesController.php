@@ -28,11 +28,12 @@ select
     a.id as aid,
     a.ticker,
     uc.target_weight,
+    uc.color,
     ifnull(uc.ord, 0) as ord
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
 where uc.`user_id` = ?
-group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, a.id, a.name, a.ticker
+group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.id, a.name, a.ticker
 ", [Auth::id()]);
 
         return view("categories.index", compact('stats'));
@@ -48,16 +49,17 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, a.id, a.name, a
                 return !empty($c['id']) && $c['id'] == $uc->id;
             });
             $cc = !empty($cc) ? array_values($cc)[0] : null;
+            $color = $cc && !empty($cc['color']) ? $cc['color'] : strtolower(sprintf('#%06X', mt_rand(0, 0xFFFFFF)));
             if ($cc && $uc->asset_id) {
                 // обновилась привязка к акции
                 DB::update("update `user_categories` set `parent_id`=?, `target_weight`=?,
-                             `ord`=? where `id`=?",
-                    [$cc['parent_id'], $cc['target_weight'], $cc['ord'], $uc->id]);
+                             `ord`=?, `color`=? where `id`=?",
+                    [$cc['parent_id'], $cc['target_weight'], $cc['ord'], $color, $uc->id]);
             } elseif ($cc && !$uc->asset_id) {
                 // обновилась привязка к категории
                 DB::update("update `user_categories` set `parent_id`=?, `target_weight`=?,
-                             `ord`=?, `name`=? where `id`=?",
-                    [$cc['parent_id'], $cc['target_weight'], $cc['ord'], $cc['name'], $uc->id]);
+                             `ord`=?, `color`=?, `name`=? where `id`=?",
+                    [$cc['parent_id'], $cc['target_weight'], $cc['ord'], $color, $cc['name'], $uc->id]);
             } elseif (!$cc) {
                 // удалилась привязка
                 DB::delete("delete from `user_categories` where `id` = ?", [$uc->id]);

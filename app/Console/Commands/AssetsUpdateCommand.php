@@ -18,37 +18,57 @@ class AssetsUpdateCommand extends Command
             $tickers[] = $row->ticker;
         }
 
-        $this->updateCurrentData($tickers);
+        $curr = $this->getCurrentData($tickers);
+        $hist = $this->getHistoryData($tickers);
+
+        foreach ($tickers as $ticker) {
+            $price = null;
+            if (isset($curr[$ticker])) {
+                $price = $curr[$ticker];
+            } elseif (isset($hist[$ticker])) {
+                $price = $hist[$ticker];
+            }
+
+            if ($price) {
+                DB::update("update `assets` set `price` = ?, `updated_at` = now() where `ticker` = ?",
+                    [$price, $ticker]);
+            }
+        }
 
         print_r("ok" . PHP_EOL);
     }
 
-    private function updateCurrentData($tickers)
+    private function getCurrentData($tickers): array
     {
         $str = file_get_contents("https://iss.moex.com/iss/" .
             "engines/stock/markets/shares/boards/tqbr/securities.json");
         $resp = json_decode($str, true);
 
+        $result = [];
+
         if (!$resp
             || empty($resp['marketdata'])
             || empty($resp['marketdata']['data'])
         ) {
-            return;
+            return $result;
         }
 
         foreach ($resp['marketdata']['data'] as $row) {
             $ticker = $row[0];
             $price = $row[4];
 
-            if (in_array($ticker, $tickers)) {
-                DB::update("update `assets` set `price` = ?, `updated_at` = now() where `ticker` = ?",
-                    [$price, $ticker]);
+            if (in_array($ticker, $tickers) && $price) {
+                $result[$ticker] = $price;
             }
         }
+
+        return $result;
     }
 
-    private function updateHistoryData($tickers)
+    private function getHistoryData($tickers): array
     {
+        $result = [];
+
         $pages = [0, 100, 200];
         foreach ($pages as $n) {
             $str = file_get_contents("https://iss.moex.com/iss/" .
@@ -59,11 +79,12 @@ class AssetsUpdateCommand extends Command
                 $ticker = $row[3];
                 $price = $row[9];
 
-                if (in_array($ticker, $tickers)) {
-                    DB::update("update `assets` set `price` = ?, `updated_at` = now() where `ticker` = ?",
-                        [$price, $ticker]);
+                if (in_array($ticker, $tickers) && $price) {
+                    $result[$ticker] = $price;
                 }
             }
         }
+
+        return $result;
     }
 }

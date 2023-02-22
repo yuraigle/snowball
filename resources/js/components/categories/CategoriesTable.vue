@@ -104,7 +104,7 @@ export default {
                     c.ord = ++i * 2;
                 }
             })
-            a.ord = b.ord + 1;
+            a.ord = b['opened'] ? 0 : b.ord + 1;
         },
 
         showAddRow() {

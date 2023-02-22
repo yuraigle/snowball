@@ -2,13 +2,13 @@
 
     <div class="row">
         <div class="col-4">
-            <canvas id="doughnut"></canvas>
+            <Doughnut :data="chartData" :options="chartOptions"/>
         </div>
         <div class="col-8">
             <table class="table border">
                 <thead class="table-light">
                 <tr>
-                    <th class="ps-2 text-secondary">
+                    <th class="ps-2 text-secondary" colspan="2">
                         <span v-if="parent" role="button" @click="parent = curr['parent_id']">
                             <i class="fa-solid fa-fw fa-arrow-left"></i> {{ curr['name'] }}
                         </span>
@@ -22,13 +22,32 @@
                 </tr>
                 </thead>
                 <tr class="border-bottom" v-for="c in childrenFor(parent)" :key="c.id">
-                    <td class="ps-2">
+                    <td style="width: 50px" class="text-center">
                         <a v-if="c['ticker']" :href="`/asset/${c['ticker']}`" class="text-decoration-none">
-                            <img :src="`/layout/asset-${c['ticker']}.png`" width="36" class="me-2" alt=""/>
-                            {{ c['name'] }}
+                            <img :src="`/layout/asset-${c['ticker']}.png`" width="36" alt=""/>
                         </a>
-                        <span v-else role="button" @click="parent=c.id">
-                            <img src="/layout/pie-chart.svg" width="36" class="me-2" alt=""/>
+                        <span v-else
+                              :style="{ 'background-color': c['color'] }"
+                              class="color_square"
+                              role="button"
+                              @click="parent=c.id"
+                        >
+                        </span>
+                    </td>
+                    <td>
+                        <div v-if="c['ticker']">
+                            <div>
+                                <a :href="`/asset/${c['ticker']}`" class="text-decoration-none">
+                                    {{ c['name'] }}
+                                </a>
+                            </div>
+                            <div class="small text-muted">
+                                <span>{{ c['ticker'] }}</span>
+                                <span v-if="c['cnt']"> &bull; {{ parseFloat(c['cnt']) }} шт.</span>
+                                <span> &bull; {{ formatPrice(c['price'], c['currency']) }}</span>
+                            </div>
+                        </div>
+                        <span v-else @click="parent=c.id" role="button">
                             {{ c['name'] }}
                         </span>
                     </td>
@@ -79,14 +98,20 @@
 </template>
 
 <script>
-import Chart from 'chart.js/auto';
+import {ArcElement, Chart as ChartJS, Colors, Tooltip} from 'chart.js';
+import {Doughnut} from 'vue-chartjs';
+
+ChartJS.register(ArcElement, Tooltip, Colors);
 
 export default {
+    components: {
+        Doughnut
+    },
+
     data() {
         return {
             stats: window.stats,
             parent: null,
-            chart: null,
         }
     },
 
@@ -103,6 +128,38 @@ export default {
             const filtered = this.stats
                 .filter(c => c['id'] === this.parent);
             return filtered.length ? filtered[0] : null;
+        },
+
+        chartData() {
+            const labels = [];
+            const values = [];
+            const colors = [];
+
+            this.childrenFor(this.parent).forEach(c => {
+                labels.push(c['name']);
+                values.push(c['ttl_now']);
+                colors.push(c['color']);
+            });
+
+            return {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    hoverOffset: 4
+                }]
+            }
+        },
+
+        chartOptions() {
+            return {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                }
+            }
         },
     },
 
@@ -128,30 +185,17 @@ export default {
             return fmt.format(x);
         },
     },
-
-    mounted() {
-        const data = {
-            labels: ['Red', 'Blue', 'Yellow'],
-            datasets: [{
-                data: [300, 50, 100],
-                hoverOffset: 4
-            }]
-        };
-
-        const config = {
-            type: 'doughnut',
-            data: data,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                }
-            },
-        };
-
-        this.chart = new Chart(document.getElementById('doughnut'), config);
-    }
 }
 </script>
+
+<style scoped>
+.color_square {
+    width: 36px;
+    height: 36px;
+    display: inline-block;
+    vertical-align: middle;
+}
+tr > td {
+    height: 64px;
+}
+</style>
