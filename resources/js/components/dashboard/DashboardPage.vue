@@ -21,76 +21,13 @@
                     <th style="width: 100px">Доля</th>
                 </tr>
                 </thead>
-                <tr class="border-bottom" v-for="c in childrenFor(parent)" :key="c.id">
-                    <td style="width: 4px" :style="{'background-color': c['color']}"></td>
-                    <td class="text-center" style="width: 50px">
-                        <a v-if="c['ticker']" :href="`/asset/${c['ticker']}`" class="text-decoration-none">
-                            <img :src="`/layout/asset-${c['ticker']}.png`" width="36" alt=""/>
-                        </a>
-                        <img v-else src="/layout/pie-chart.png" class="p-0" width="36" alt=""
-                             role="button" @click="parent=c.id"/>
-                    </td>
-                    <td>
-                        <div v-if="c['ticker']">
-                            <div>
-                                <a :href="`/asset/${c['ticker']}`" class="text-decoration-none">
-                                    {{ c['name'] }}
-                                </a>
-                            </div>
-                            <div class="small text-muted">
-                                <span>{{ c['ticker'] }}</span>
-                                <span v-if="c['cnt']"> &bull; {{ parseFloat(c['cnt']) }} шт.</span>
-                                <span> &bull; {{ formatPrice(c['price'], c['currency']) }}</span>
-                            </div>
-                        </div>
-                        <div v-else @click="parent=c.id" role="button">
-                            <div>{{ c['name'] }}</div>
-                            <div class="small text-muted">
-                                {{ childrenFor(c.id).length }} шт.
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="p-0 small fw-bold">{{ formatPrice(c['ttl_now'], 'RUB') }}</div>
-                        <div class="p-0 small text-muted">{{ formatPrice(c['ttl_spent'], 'RUB') }}</div>
-                    </td>
-                    <td class="small">
-                        <div v-if="c['ttl_now'] > c['ttl_spent']" class="text-success">
-                            <div class="p-0 small">
-                                +{{ formatPrice(c['ttl_now'] - c['ttl_spent'], 'RUB') }}
-                            </div>
-                            <div class="p-0 small">
-                                <i class="fa-solid fa-fw fa-chevron-up"></i>
-                                +{{ formatPercent((c['ttl_now'] - c['ttl_spent']) / c['ttl_spent'] * 100) }}
-                            </div>
-                        </div>
-                        <div v-else-if="c['ttl_now'] < c['ttl_spent']" class="text-danger">
-                            <div class="p-0 small">
-                                {{ formatPrice(c['ttl_now'] - c['ttl_spent'], 'RUB') }}
-                            </div>
-                            <div class="p-0 small">
-                                <i class="fa-solid fa-fw fa-chevron-down"></i>
-                                {{ formatPercent((c['ttl_now'] - c['ttl_spent']) / c['ttl_spent'] * 100) }}
-                            </div>
-                        </div>
-                        <div v-else-if="c['ttl_now'] === c['ttl_spent']">
-                            <div class="p-0 small">
-                                {{ formatPrice(c['ttl_now'] - c['ttl_spent'], 'RUB') }}
-                            </div>
-                            <div class="p-0 small">
-                                0%
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="p-0 small">
-                            {{ formatPercent(c['ttl_now'] / totalNow * 100) }}
-                        </div>
-                        <div class="p-0 small fw-bold">
-                            {{ formatPercent(c['target_weight']) }}
-                        </div>
-                    </td>
-                </tr>
+                <DashboardRow v-for="c in childrenFor(parent)"
+                              :c="c"
+                              :key="c.id"
+                              :total-now="totalNow"
+                              :cnt-children="childrenFor(c.id).length"
+                              @clicked="onRowClicked(c)"
+                />
             </table>
         </div>
     </div>
@@ -99,11 +36,13 @@
 <script>
 import {ArcElement, Chart as ChartJS, Colors, Tooltip} from 'chart.js';
 import {Doughnut} from 'vue-chartjs';
+import DashboardRow from "./DashboardRow.vue";
 
 ChartJS.register(ArcElement, Tooltip, Colors);
 
 export default {
     components: {
+        DashboardRow,
         Doughnut
     },
 
@@ -168,21 +107,14 @@ export default {
                 .filter(c => c['parent_id'] === parentId)
                 .sort((c1, c2) => c1['ord'] - c2['ord'] || c1['id'] - c2['id'])
         },
-
-        formatPercent(x) {
-            if (isNaN(x)) {
-                return "0%";
+        onRowClicked(c) {
+            if (c['ticker']) {
+                window.location.href = '/asset/' + c['ticker'];
+            } else {
+                this.parent = c.id
             }
-            return Math.round(x * 100) / 100 + "%";
-        },
 
-        formatPrice(x, c) {
-            let fmt = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'RUB'});
-            if (c === 'USD') {
-                fmt = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'})
-            }
-            return fmt.format(x);
-        },
+        }
     },
 }
 </script>
