@@ -8,7 +8,7 @@
             <table class="table border">
                 <thead class="table-light">
                 <tr>
-                    <th class="ps-2 text-secondary" colspan="2">
+                    <th class="ps-2 text-secondary" colspan="3">
                         <span v-if="parent" role="button" @click="parent = curr['parent_id']">
                             <i class="fa-solid fa-fw fa-arrow-left"></i> {{ curr['name'] }}
                         </span>
@@ -22,17 +22,13 @@
                 </tr>
                 </thead>
                 <tr class="border-bottom" v-for="c in childrenFor(parent)" :key="c.id">
-                    <td style="width: 50px" class="text-center">
+                    <td style="width: 4px" :style="{'background-color': c['color']}"></td>
+                    <td class="text-center" style="width: 50px">
                         <a v-if="c['ticker']" :href="`/asset/${c['ticker']}`" class="text-decoration-none">
                             <img :src="`/layout/asset-${c['ticker']}.png`" width="36" alt=""/>
                         </a>
-                        <span v-else
-                              :style="{ 'background-color': c['color'] }"
-                              class="color_square"
-                              role="button"
-                              @click="parent=c.id"
-                        >
-                        </span>
+                        <img v-else src="/layout/pie-chart.png" class="p-0" width="36" alt=""
+                             role="button" @click="parent=c.id"/>
                     </td>
                     <td>
                         <div v-if="c['ticker']">
@@ -47,9 +43,12 @@
                                 <span> &bull; {{ formatPrice(c['price'], c['currency']) }}</span>
                             </div>
                         </div>
-                        <span v-else @click="parent=c.id" role="button">
-                            {{ c['name'] }}
-                        </span>
+                        <div v-else @click="parent=c.id" role="button">
+                            <div>{{ c['name'] }}</div>
+                            <div class="small text-muted">
+                                {{ childrenFor(c.id).length }} шт.
+                            </div>
+                        </div>
                     </td>
                     <td>
                         <div class="p-0 small fw-bold">{{ formatPrice(c['ttl_now'], 'RUB') }}</div>
@@ -189,12 +188,6 @@ export default {
 </script>
 
 <style scoped>
-.color_square {
-    width: 36px;
-    height: 36px;
-    display: inline-block;
-    vertical-align: middle;
-}
 tr > td {
     height: 64px;
 }

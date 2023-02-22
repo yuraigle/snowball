@@ -17,8 +17,8 @@
 
             <template v-if="!c['ticker']">
                 <img
-                    class="px-1"
-                    src="/layout/pie-chart.svg"
+                    class="p-0"
+                    src="/layout/pie-chart.png"
                     :alt="c['name']"
                     width="32"
                     draggable="true"
@@ -130,9 +130,11 @@ tr:hover .edits > button {
 
 .color_picker {
     cursor: pointer;
-    width: 12px !important;
-    height: 32px;
+    width: 9px !important;
+    height: 34px;
     vertical-align: middle;
+    padding: 0;
+    margin-right: 10px;
 }
 
 </style>

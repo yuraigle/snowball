@@ -127,7 +127,7 @@ export default {
             this.stats.push({
                 aid: null,
                 ticker: null,
-                icon: 'pie-chart.svg',
+                icon: 'pie-chart.png',
                 parent_id: null,
                 name: this.addRowName,
                 target_weight: this.addRowTargetWeight,

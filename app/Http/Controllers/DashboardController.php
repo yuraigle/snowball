@@ -47,8 +47,6 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.nam
             $row->ttl_now = $this->calcTotalNow($stats, $row->id);
         }
 
-        // TODO пересчёт не будет работать при вложенности >1
-
         return view("dashboard.index", compact('stats'));
     }
 

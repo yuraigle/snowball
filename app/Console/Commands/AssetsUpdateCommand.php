@@ -18,8 +18,11 @@ class AssetsUpdateCommand extends Command
             $tickers[] = $row->ticker;
         }
 
-        $curr = $this->getCurrentData($tickers);
-        $hist = $this->getHistoryData($tickers);
+        $curr = $this->getCurrentDataMoex("tqbr", $tickers); // moex-stocks
+        $hist = $this->getHistoryDataMoex("tqbr", $tickers);
+
+        $curr = array_merge($curr, $this->getCurrentDataMoex("tqtf", $tickers)); // moex-etf
+        $hist = array_merge($hist, $this->getHistoryDataMoex("tqtf", $tickers));
 
         foreach ($tickers as $ticker) {
             $price = null;
@@ -38,18 +41,14 @@ class AssetsUpdateCommand extends Command
         print_r("ok" . PHP_EOL);
     }
 
-    private function getCurrentData($tickers): array
+    private function getCurrentDataMoex($board, $tickers): array
     {
         $str = file_get_contents("https://iss.moex.com/iss/" .
-            "engines/stock/markets/shares/boards/tqbr/securities.json");
+            "engines/stock/markets/shares/boards/$board/securities.json");
         $resp = json_decode($str, true);
 
         $result = [];
-
-        if (!$resp
-            || empty($resp['marketdata'])
-            || empty($resp['marketdata']['data'])
-        ) {
+        if (!$resp || empty($resp['marketdata']) || empty($resp['marketdata']['data'])) {
             return $result;
         }
 
@@ -65,15 +64,19 @@ class AssetsUpdateCommand extends Command
         return $result;
     }
 
-    private function getHistoryData($tickers): array
+    private function getHistoryDataMoex($board, $tickers): array
     {
         $result = [];
+        $page = 0;
 
-        $pages = [0, 100, 200];
-        foreach ($pages as $n) {
+        while (true) {
             $str = file_get_contents("https://iss.moex.com/iss/" .
-                "history/engines/stock/markets/shares/boards/tqbr/securities.json?start=$n");
+                "history/engines/stock/markets/shares/boards/$board/securities.json?start=$page");
             $resp = json_decode($str, true);
+
+            if (!$resp || empty($resp['history']) || empty($resp['history']['data'])) {
+                return $result;
+            }
 
             foreach ($resp['history']['data'] as $row) {
                 $ticker = $row[3];
@@ -82,6 +85,12 @@ class AssetsUpdateCommand extends Command
                 if (in_array($ticker, $tickers) && $price) {
                     $result[$ticker] = $price;
                 }
+            }
+
+            if (count($resp['history']['data']) == 100) {
+                $page += 100;
+            } else {
+                break;
             }
         }
 
