@@ -107,6 +107,7 @@ export default {
                 .filter(c => c['parent_id'] === parentId)
                 .sort((c1, c2) => c1['ord'] - c2['ord'] || c1['id'] - c2['id'])
         },
+
         onRowClicked(c) {
             if (c['ticker']) {
                 window.location.href = '/asset/' + c['ticker'];

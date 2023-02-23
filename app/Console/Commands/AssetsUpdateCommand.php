@@ -24,6 +24,9 @@ class AssetsUpdateCommand extends Command
         $curr = array_merge($curr, $this->getCurrentDataMoex("tqtf", $tickers)); // moex-etf
         $hist = array_merge($hist, $this->getHistoryDataMoex("tqtf", $tickers));
 
+        $curr = array_merge($curr, $this->getCurrentDataMoex("tqtd", $tickers)); // moex-etf-usd
+        $hist = array_merge($hist, $this->getHistoryDataMoex("tqtd", $tickers));
+
         foreach ($tickers as $ticker) {
             $price = null;
             if (isset($curr[$ticker])) {

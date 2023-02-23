@@ -1,13 +1,13 @@
 <template>
     <tr class="border-bottom">
         <td style="width: 4px" :style="{'background-color': c['color']}"></td>
-        <td class="text-center" style="width: 50px" @click="$emit('clicked')">
+        <td class="text-center" style="width: 50px" role="button" @click="$emit('clicked')">
             <img v-if="c['ticker']" width="36" height="36" class="p-1" :alt="c['ticker']"
                  :src="`/layout/asset-${c['ticker']}.png`"/>
             <img v-else width="36" height="36" class="p-1" :alt="c['name']"
                  src="/layout/pie-chart.png"/>
         </td>
-        <td @click="$emit('clicked')" role="button">
+        <td role="button" @click="$emit('clicked')">
             <div class="p-0">
                 {{ c['name'] }}
             </div>

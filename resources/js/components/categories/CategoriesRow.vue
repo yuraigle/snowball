@@ -28,7 +28,7 @@
             </template>
             <template v-else>
                 <img
-                    class="px-1"
+                    class="p-0"
                     :src="`/layout/asset-${c['ticker']}.png`"
                     :alt="c['name']"
                     width="32"
