@@ -14,20 +14,20 @@
             <div v-if="c['ticker']" class="small text-muted p-0">
                 <span>{{ c['ticker'] }}</span>
                 <span v-if="c['cnt']"> &bull; {{ parseFloat(c['cnt']) }} шт.</span>
-                <span> &bull; {{ formatPrice(c['price'], c['currency']) }}</span>
+                <span> &bull; {{ formatPriceExact(c['price'], c['currency']) }}</span>
             </div>
             <div v-else class="small text-muted p-0">
                 <span>{{ cntChildren }} шт.</span>
             </div>
         </td>
         <td>
-            <div class="p-0 small fw-bold">{{ formatPrice(c['ttl_now'], c['currency']) }}</div>
-            <div class="p-0 small text-muted">{{ formatPrice(c['ttl_spent'], c['currency']) }}</div>
+            <div class="p-0 small fw-bold">{{ formatPrice(c['ttl_now'], 'RUB') }}</div>
+            <div class="p-0 small text-muted">{{ formatPrice(c['ttl_spent'], 'RUB') }}</div>
         </td>
         <td class="small">
             <div v-if="c['ttl_now'] > c['ttl_spent']" class="text-success">
                 <div class="p-0 small">
-                    +{{ formatPrice(c['ttl_now'] - c['ttl_spent'], c['currency']) }}
+                    +{{ formatPrice(c['ttl_now'] - c['ttl_spent'], 'RUB') }}
                 </div>
                 <div class="p-0 small">
                     <i class="fa-solid fa-fw fa-chevron-up"></i>
@@ -36,7 +36,7 @@
             </div>
             <div v-else-if="c['ttl_now'] < c['ttl_spent']" class="text-danger">
                 <div class="p-0 small">
-                    {{ formatPrice(c['ttl_now'] - c['ttl_spent'], c['currency']) }}
+                    {{ formatPrice(c['ttl_now'] - c['ttl_spent'], 'RUB') }}
                 </div>
                 <div class="p-0 small">
                     <i class="fa-solid fa-fw fa-chevron-down"></i>
@@ -45,7 +45,7 @@
             </div>
             <div v-else-if="c['ttl_now'] === c['ttl_spent']">
                 <div class="p-0 small">
-                    {{ formatPrice(c['ttl_now'] - c['ttl_spent'], c['currency']) }}
+                    {{ formatPrice(c['ttl_now'] - c['ttl_spent'], 'RUB') }}
                 </div>
                 <div class="p-0 small">
                     0%
@@ -81,6 +81,22 @@ export default {
             }
             return fmt.format(x);
         },
+
+        formatPriceExact(x, c) {
+            let fmt = new Intl.NumberFormat('ru-RU', {
+                style: 'currency',
+                currency: 'RUB',
+                maximumFractionDigits: 4
+            });
+            if (c === 'USD') {
+                fmt = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    maximumFractionDigits: 4
+                })
+            }
+            return fmt.format(x);
+        }
     }
 }
 </script>

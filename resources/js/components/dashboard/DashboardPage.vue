@@ -1,8 +1,9 @@
 <template>
 
     <div class="row">
-        <div class="col-4">
-            <Doughnut :data="chartData" :options="chartOptions"/>
+        <div class="col-4 doughnut_wrapper">
+            <div class="legend">{{ formatPrice(totalNow / 1000, 'KRUB', 0) }}K</div>
+            <Doughnut :data="chartData" :options="chartOptions" ref="doughnut"/>
         </div>
         <div class="col-8">
             <table class="table border">
@@ -27,6 +28,8 @@
                               :total-now="totalNow"
                               :cnt-children="childrenFor(c.id).length"
                               @clicked="onRowClicked(c)"
+                              @mouseenter="onRowHovered(c)"
+                              @mouseleave="onMouseLeave(c)"
                 />
             </table>
         </div>
@@ -96,6 +99,15 @@ export default {
                     legend: {
                         display: false
                     },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const total = context.dataset.data
+                                    .reduce((a, b) => parseFloat(a) + parseFloat(b));
+                                return (parseFloat(context.parsed) / total * 100).toFixed() + '%';
+                            }
+                        }
+                    },
                 }
             }
         },
@@ -109,13 +121,60 @@ export default {
         },
 
         onRowClicked(c) {
+            const chart = this.$refs.doughnut.chart;
+            chart.tooltip.setActiveElements([]);
+
             if (c['ticker']) {
                 window.location.href = '/asset/' + c['ticker'];
             } else {
                 this.parent = c.id
             }
+        },
 
-        }
+        onRowHovered(c) {
+            // console.log('hovered ' + c.id);
+            const chart = this.$refs.doughnut.chart;
+
+            let i = 0;
+            let ix = 0;
+            this.childrenFor(this.parent).forEach(c1 => {
+                if (c1.id === c.id) {
+                    ix = i;
+                }
+                i++;
+            });
+
+            chart.tooltip.setActiveElements([{datasetIndex: 0, index: ix}]);
+            chart.update();
+        },
+
+        onMouseLeave() {
+            const chart = this.$refs.doughnut.chart;
+            chart.tooltip.setActiveElements([]);
+            chart.update();
+        },
+
+        formatPrice(x, c, n = 2) {
+            let fmt;
+            if (c === 'RUB') {
+                fmt = new Intl.NumberFormat('ru-RU', {
+                    style: 'currency',
+                    currency: 'RUB',
+                    maximumFractionDigits: n
+                });
+            } else if (c === 'USD') {
+                fmt = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    maximumFractionDigits: n
+                })
+            } else {
+                fmt = new Intl.NumberFormat('ru-RU', {
+                    maximumFractionDigits: n
+                })
+            }
+            return fmt.format(x);
+        },
     },
 }
 </script>
@@ -123,5 +182,18 @@ export default {
 <style scoped>
 tr > td {
     height: 64px;
+}
+
+.doughnut_wrapper {
+    position: relative;
+}
+
+.legend {
+    font-size: 1.8rem;
+    font-weight: bold;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 </style>

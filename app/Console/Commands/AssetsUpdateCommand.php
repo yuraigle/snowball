@@ -27,6 +27,15 @@ class AssetsUpdateCommand extends Command
         $curr = array_merge($curr, $this->getCurrentDataMoex("tqtd", $tickers)); // moex-etf-usd
         $hist = array_merge($hist, $this->getHistoryDataMoex("tqtd", $tickers));
 
+        $curr = array_merge($curr, $this->getCurrencyDataMoex());
+
+        $curr = array_merge($curr, $this->getCurrentDataYahoo('VT'));
+        $curr = array_merge($curr, $this->getCurrentDataYahoo('BTC-USD'));
+        $curr = array_merge($curr, $this->getCurrentDataYahoo('ETH-USD'));
+        $curr = array_merge($curr, $this->getCurrentDataYahoo('BNB-USD'));
+        $curr = array_merge($curr, $this->getCurrentDataYahoo('MATIC-USD'));
+        $curr = array_merge($curr, $this->getCurrentDataYahoo('XMR-USD'));
+
         foreach ($tickers as $ticker) {
             $price = null;
             if (isset($curr[$ticker])) {
@@ -67,6 +76,25 @@ class AssetsUpdateCommand extends Command
         return $result;
     }
 
+    private function getCurrencyDataMoex(): array
+    {
+        $str = file_get_contents("https://iss.moex.com/iss/engines/currency/markets/index/securities.json");
+        $resp = json_decode($str, true);
+
+        $result = [];
+        if (!$resp || empty($resp['marketdata']) || empty($resp['marketdata']['data'])) {
+            return $result;
+        }
+
+        foreach ($resp['marketdata']['data'] as $row) {
+            $ticker = $row[0];
+            $price = $row[8];
+            $result[$ticker] = $price;
+        }
+
+        return $result;
+    }
+
     private function getHistoryDataMoex($board, $tickers): array
     {
         $result = [];
@@ -96,6 +124,23 @@ class AssetsUpdateCommand extends Command
                 break;
             }
         }
+
+        return $result;
+    }
+
+    private function getCurrentDataYahoo($ticker): array
+    {
+        $str = file_get_contents("https://query1.finance.yahoo.com/v8/finance/chart/$ticker");
+        $resp = json_decode($str, true);
+
+        $result = [];
+        if (!$resp || !$resp['chart'] || !$resp['chart']['result']) {
+            return $result;
+        }
+
+        $price = $resp['chart']['result'][0]['meta']['regularMarketPrice'];
+        $ticker = preg_replace('|-USD|', '', $ticker);
+        $result[$ticker] = $price;
 
         return $result;
     }

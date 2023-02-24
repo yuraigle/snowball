@@ -31,15 +31,18 @@ select
     uc.target_weight,
     uc.color,
     a.price,
+    a.currency,
     sum(`amount`) as cnt,
-    sum(`amount` * uh.price) as ttl_spent,
-    sum(`amount`) * max(a.price) as ttl_now,
+    sum(`amount` * uh.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_spent,
+    sum(`amount`) * max(a.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_now,
     ifnull(uc.ord, 0) as ord
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
+    left join `assets` usd on usd.ticker = 'USDFIX'
     left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
 where uc.`user_id` = ?
-group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.name, a.ticker, a.price
+group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.name,
+         a.ticker, a.price, a.currency, usd.price
 ", [Auth::id()]);
 
         foreach ($stats as $row) {
