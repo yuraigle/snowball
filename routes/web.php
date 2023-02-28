@@ -1,8 +1,9 @@
 <?php
 
+use App\Http\Controllers\AdviceController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CategoriesController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,5 +30,7 @@ Route::get('/', [DashboardController::class, 'index'])->middleware('auth')->name
 Route::get('/asset/{ticker}', [DashboardController::class, 'asset'])->middleware('auth');
 Route::post('/transaction', [DashboardController::class, 'transaction'])->middleware('auth');
 Route::get('/categories', [CategoriesController::class, 'index'])->middleware('auth');
-
 Route::post('/categories/update', [CategoriesController::class, 'update'])->middleware('auth');
+Route::get('/advice', [AdviceController::class, 'index'])->middleware('auth');
+
+Route::post('/advice/ok', [AdviceController::class, 'ok'])->name('ok-test');

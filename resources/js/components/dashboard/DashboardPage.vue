@@ -121,14 +121,16 @@ export default {
         },
 
         onRowClicked(c) {
-            const chart = this.$refs.doughnut.chart;
-            chart.tooltip.setActiveElements([]);
-
             if (c['ticker']) {
                 window.location.href = '/asset/' + c['ticker'];
-            } else {
-                this.parent = c.id
+                return;
             }
+
+            this.parent = c.id
+            const chart = this.$refs.doughnut.chart;
+            chart.setActiveElements([]);
+            chart.tooltip.setActiveElements([]);
+            chart.update();
         },
 
         onRowHovered(c) {
@@ -144,12 +146,14 @@ export default {
                 i++;
             });
 
+            chart.setActiveElements([{datasetIndex: 0, index: ix}]);
             chart.tooltip.setActiveElements([{datasetIndex: 0, index: ix}]);
             chart.update();
         },
 
         onMouseLeave() {
             const chart = this.$refs.doughnut.chart;
+            chart.setActiveElements([]);
             chart.tooltip.setActiveElements([]);
             chart.update();
         },

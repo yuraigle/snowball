@@ -1,5 +1,7 @@
 @extends('layouts.base')
 
+@section('title') - Активы@endsection
+
 @section('content')
     <h1 class="h3">Портфель</h1>
 
