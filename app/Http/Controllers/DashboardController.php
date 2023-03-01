@@ -99,15 +99,45 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.nam
             [Auth::id(), $asset->id]);
 
         $stats = DB::select("
-select sum(`amount`) as cnt, sum(amount * h.price) as ttl_spent
-from `user_holdings` h left join `assets` a on a.id = h.asset_id
-where user_id = ? and asset_id = ?", [Auth::id(), $asset->id]);
+select sum(uh.`amount`) as cnt,
+       sum(uh.`amount` * uh.price) as ttl_spent,
+       sum(uh.`amount` * uh.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_spent_rub
+from `user_holdings` uh
+    left join `assets` a on a.id = uh.asset_id
+    left join `assets` usd on usd.ticker = 'USDFIX'
+where user_id = ? and asset_id = ?
+group by uh.`amount`, uh.price, usd.price, a.currency
+", [Auth::id(), $asset->id]);
 
         return view("dashboard.asset", [
             'asset' => $asset,
             'transactions' => $tx,
-            'stats' => $stats[0],
+            'stats' => !empty($stats) ? $stats[0] : null,
+            'ttlByUser' => $this->sumByUser(Auth::id()),
+            'ttlByUserAsset' => $this->sumByUserAsset(Auth::id(), $asset->id)
         ]);
+    }
+
+    private function sumByUser($uid): float
+    {
+        $r = DB::select("select sum(a.price * uh.amount * case when a.currency = 'USD' then usd.price else 1 end) as ttl
+            from user_holdings uh
+                left join `assets` a on a.id = uh.asset_id
+                left join `assets` usd on usd.ticker = 'USDFIX'
+            where uh.user_id = ?
+            ", [$uid]);
+        return !empty($r) && $r[0]->ttl ? $r[0]->ttl : 0;
+    }
+
+    private function sumByUserAsset($uid, $aid): float
+    {
+        $r = DB::select("select sum(a.price * uh.amount * case when a.currency = 'USD' then usd.price else 1 end) as ttl
+            from user_holdings uh
+                left join `assets` a on a.id = uh.asset_id
+                left join `assets` usd on usd.ticker = 'USDFIX'
+            where uh.user_id = ? and a.id = ?
+            ", [$uid, $aid]);
+        return !empty($r) && $r[0]->ttl ? $r[0]->ttl : 0;
     }
 
     public function transaction(Request $req): JsonResponse

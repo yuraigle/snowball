@@ -30,7 +30,20 @@
                 <td>{{ formatPrice(tx['price']) }}</td>
                 <td>{{ formatPrice(tx['commission']) }}</td>
                 <td>{{ formatPrice(tx['amount'] * tx['price'] + 1 * tx['commission']) }}</td>
-                <td>{{ formatPrice(calcProfit(tx['amount'], tx['price'], tx['commission'])) }}</td>
+                <td>
+                    <span v-if="calcProfit(tx['amount'], tx['price'], tx['commission']) >= 0"
+                          class="text-success small">
+                        <i class="fa-solid fa-fw fa-chevron-up"></i>
+                        +{{ formatPrice(calcProfit(tx['amount'], tx['price'], tx['commission'])) }}
+                        ( {{ formatPercent(calcProfitPercent(tx['amount'], tx['price'], tx['commission'])) }} )
+                    </span>
+                    <span v-else class="text-danger small">
+                        <i class="fa-solid fa-fw fa-chevron-down"></i>
+                        {{ formatPrice(calcProfit(tx['amount'], tx['price'], tx['commission'])) }}
+                        ( {{ formatPercent(calcProfitPercent(tx['amount'], tx['price'], tx['commission'])) }} )
+                    </span>
+
+                </td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-link" type="button" title="Редактировать"
                             @click="selected=tx['id']"
@@ -56,6 +69,13 @@ export default {
     },
 
     methods: {
+        formatPercent(x) {
+            if (isNaN(x)) {
+                return "0%";
+            }
+            return Math.round(x * 100) / 100 + "%";
+        },
+
         formatPrice(x, c) {
             let fmt = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'RUB'});
             if (c === 'USD') {
@@ -66,6 +86,10 @@ export default {
 
         calcProfit(a, p, c) {
             return a * (window.asset_price - p) - c;
+        },
+
+        calcProfitPercent(a, p, c) {
+            return this.calcProfit(a, p, c) / (a * p + 1 * c) * 100;
         }
     }
 }

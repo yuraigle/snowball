@@ -4,8 +4,9 @@
         <td class="text-center" style="width: 50px" role="button" @click="$emit('clicked')">
             <img v-if="c['ticker']" width="36" height="36" class="p-1" :alt="c['ticker']"
                  :src="`/layout/asset-${c['ticker']}.png`"/>
-            <img v-else width="36" height="36" class="p-1" :alt="c['name']"
-                 src="/layout/pie-chart.png"/>
+            <img v-else width="36" height="36" class="p-0" :alt="c['name']"
+                 :style="{'background-color': c['color']}"
+                 src="/layout/pie-chart-1.png"/>
         </td>
         <td role="button" @click="$emit('clicked')">
             <div class="p-0">

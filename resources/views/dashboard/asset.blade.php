@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    @if($stats->cnt)
+    @if($stats && $stats->cnt)
         <div class="row my-4">
             <h2 class="h4">В моём портфеле</h2>
             <div class="col-lg-4">
@@ -21,19 +21,35 @@
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Текущая стоимость:</span>
-                    <span class="float-end">{{ number_format($stats->cnt * $asset->price) }} ₽</span>
+                    <span class="float-end">{{ number_format($ttlByUserAsset) }} ₽</span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Вложено:</span>
-                    <span class="float-end">{{ number_format($stats->ttl_spent) }} ₽</span>
+                    <span class="float-end">
+                        @if($asset->currency == 'USD')
+                            $
+                        @endif
+                        {{ number_format($stats->ttl_spent) }}
+                        @if($asset->currency == 'RUB')
+                            ₽
+                        @endif
+                    </span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Средняя цена:</span>
-                    <span class="float-end">{{ number_format($stats->ttl_spent / $stats->cnt, 2) }} ₽</span>
+                    <span class="float-end">
+                        @if($asset->currency == 'USD')
+                            $
+                        @endif
+                        {{ number_format($stats->ttl_spent / $stats->cnt, 2) }}
+                        @if($asset->currency == 'RUB')
+                            ₽
+                        @endif
+                    </span>
                 </div>
                 <div class="border-bottom p-2">
-                    <span class="text-muted small">Доля:</span>
-                    <span class="float-end">14,33%</span>
+                    <span class="text-muted small">Доля в портфеле:</span>
+                    <span class="float-end">{{ number_format($ttlByUserAsset / $ttlByUser * 100, 2) }}%</span>
                 </div>
             </div>
             <div class="col-lg-4">

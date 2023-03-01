@@ -87,7 +87,8 @@ export default {
                 datasets: [{
                     data: values,
                     backgroundColor: colors,
-                    hoverOffset: 4
+                    offset: 5,
+                    hoverOffset: 30
                 }]
             }
         },
@@ -95,6 +96,7 @@ export default {
         chartOptions() {
             return {
                 responsive: true,
+                radius: '90%',
                 plugins: {
                     legend: {
                         display: false
