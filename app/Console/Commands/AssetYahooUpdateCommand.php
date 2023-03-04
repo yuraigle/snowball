@@ -77,14 +77,14 @@ class AssetYahooUpdateCommand extends Command
                 ];
 
                 if ($exists->c) {
-                    DB::update("update `asset_history` set `open`=?, `high`=?, `low`=?, `close`=?
+                    DB::update("update `asset_history` set `open`=?, `high`=?, `low`=?, `close`=?, updated_at=now()
                             where `date`=? and `asset_id`=?", [...$ohlc, $date, $aid]);
                 } else {
                     DB::insert("insert into `asset_history` (`asset_id`, `open`, `high`, `low`, `close`, `date`)
                             values (?, ?, ?, ?, ?, ?)", [$aid, ...$ohlc, $date]);
                 }
 
-                DB::update("update `asset_history` set `close`=? where `date`=? and `asset_id`=?",
+                DB::update("update `asset_history` set `close`=?, updated_at=now() where `date`=? and `asset_id`=?",
                     [$s["regularMarketPreviousClose"], $dateMinus1, $aid]);
             }
         }
