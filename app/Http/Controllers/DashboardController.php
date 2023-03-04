@@ -50,7 +50,13 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.nam
             $row->ttl_now = $this->calcTotalNow($stats, $row->id);
         }
 
-        return view("dashboard.index", compact('stats'));
+        $indexes = [];
+        $rows = DB::select("select ticker, price from assets where ticker in ('USDFIX', 'IMOEX', 'RTSI', 'BTC')");
+        foreach ($rows as $row) {
+            $indexes[$row->ticker] = floatval($row->price);
+        }
+
+        return view("dashboard.index", compact('stats', 'indexes'));
     }
 
     private function calcTotalSpent($stats, $id): float
@@ -106,7 +112,7 @@ from `user_holdings` uh
     left join `assets` a on a.id = uh.asset_id
     left join `assets` usd on usd.ticker = 'USDFIX'
 where user_id = ? and asset_id = ?
-group by uh.`amount`, uh.price, usd.price, a.currency
+group by usd.price, a.currency
 ", [Auth::id(), $asset->id]);
 
         return view("dashboard.asset", [

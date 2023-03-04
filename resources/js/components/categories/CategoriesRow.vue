@@ -43,12 +43,20 @@
         </td>
         <td class="text-end edits" style="width: 30px">
             <button
-                class="btn btn-link text-dark opacity-50 px-2"
+                class="btn btn-link text-dark opacity-50 py-0 px-2"
                 type="button"
                 :title="`Удалить ${c['ticker'] ? 'актив' : 'категорию'}`"
                 @click="$emit('remove')"
             >
                 <i class="fa-solid fa-fw fa-xmark"></i>
+            </button>
+            <button v-if="c['locked']" class="btn btn-link text-dark py-0 px-2 visible" @click="onUnlock"
+                    title="Исключён из рекомендаций">
+                <i class="fa fa-fw fa-lock"></i>
+            </button>
+            <button v-else-if="c['ticker']" class="btn btn-link text-dark opacity-50 py-0 px-2" @click="onLock"
+                    title="Не рекомендовать к покупке">
+                <i class="fa fa-fw fa-lock"></i>
             </button>
         </td>
     </tr>
@@ -79,6 +87,14 @@ export default {
         onDragStart(e) {
             e.dataTransfer.clearData();
             e.dataTransfer.setData('text/plain', this.c['id']);
+        },
+        onLock() {
+            this.c['locked'] = 1;
+            this.$emit('update:modelValue', this.c);
+        },
+        onUnlock() {
+            this.c['locked'] = 0;
+            this.$emit('update:modelValue', this.c);
         }
     }
 

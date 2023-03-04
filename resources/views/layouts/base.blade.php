@@ -23,7 +23,7 @@
 
         <ul class="navbar-nav me-auto">
             <li class="nav-item ms-1">
-                <a class="nav-link btn btn-sm btn-outline-light" href="/">
+                <a class="nav-link btn btn-sm btn-outline-light d-none d-md-block" href="/">
                     Портфель
                 </a>
             </li>

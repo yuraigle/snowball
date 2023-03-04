@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS `user_holdings`;
 DROP TABLE IF EXISTS `user_categories`;
+DROP TABLE IF EXISTS `asset_history`;
 DROP TABLE IF EXISTS `assets`;
 DROP TABLE IF EXISTS `users`;
 
@@ -47,8 +48,6 @@ CREATE TABLE `user_holdings`
     `commission` decimal(20, 6) NOT NULL DEFAULT 0.000000,
     `created_at` datetime       NOT NULL DEFAULT current_timestamp(),
     PRIMARY KEY (`id`) USING BTREE,
-    KEY `FK_USER_HOLDINGS_ON_USER` (`user_id`),
-    KEY `FK_USER_HOLDINGS_ON_ASSET` (`asset_id`),
     CONSTRAINT `FK_USER_HOLDINGS_ON_ASSET` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`) ON DELETE CASCADE,
     CONSTRAINT `FK_USER_HOLDINGS_ON_USER` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE = InnoDB
@@ -64,9 +63,6 @@ CREATE TABLE `user_categories`
     `name`          nvarchar(100) NULL,
     `target_weight` decimal(5, 2) NULL,
     PRIMARY KEY (`id`) USING BTREE,
-    KEY `FK_CATEGORIES_USER` (`user_id`),
-    KEY `FK_CATEGORIES_ASSET` (`asset_id`),
-    KEY `FK_CATEGORIES_PARENT` (`parent_id`),
     CONSTRAINT `FK_CATEGORIES_ON_USER` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
     CONSTRAINT `FK_CATEGORIES_ON_ASSET` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`) ON DELETE CASCADE,
     CONSTRAINT `FK_CATEGORIES_ON_PARENT` FOREIGN KEY (`parent_id`) REFERENCES `user_categories` (`id`) ON DELETE CASCADE
@@ -74,3 +70,19 @@ CREATE TABLE `user_categories`
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_general_ci;
 
+CREATE TABLE `asset_history`
+(
+    `id`         bigint(20)     NOT NULL AUTO_INCREMENT,
+    `asset_id`   bigint(20)     NOT NULL,
+    `date`       date           NOT NULL,
+    `open`       decimal(20, 6) NULL,
+    `high`       decimal(20, 6) NULL,
+    `low`        decimal(20, 6) NULL,
+    `close`      decimal(20, 6) NULL,
+    `updated_at` datetime       NOT NULL DEFAULT current_timestamp(),
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `IX_ASSET_HISTORY_DATE_UNIQUE` (`asset_id`, `date`) USING BTREE,
+    CONSTRAINT `FK_ASSET_HISTORY_ON_ASSET` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci;

@@ -29,12 +29,13 @@ select
     a.ticker,
     uc.target_weight,
     uc.color,
+    uc.locked,
     ifnull(uc.ord, 0) as ord
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
 where uc.`user_id` = ?
-group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.id, a.name, a.ticker
-", [Auth::id()]);
+group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, uc.locked,
+         a.id, a.name, a.ticker", [Auth::id()]);
 
         return view("categories.index", compact('stats'));
     }
@@ -53,13 +54,13 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.id,
             if ($cc && $uc->asset_id) {
                 // обновилась привязка к акции
                 DB::update("update `user_categories` set `parent_id`=?, `target_weight`=?,
-                             `ord`=?, `color`=? where `id`=?",
-                    [$cc['parent_id'], $cc['target_weight'], $cc['ord'], $color, $uc->id]);
+                             `ord`=?, `color`=?, `locked`=? where `id`=?",
+                    [$cc['parent_id'], $cc['target_weight'], $cc['ord'], $color, $cc['locked'], $uc->id]);
             } elseif ($cc && !$uc->asset_id) {
                 // обновилась привязка к категории
                 DB::update("update `user_categories` set `parent_id`=?, `target_weight`=?,
-                             `ord`=?, `color`=?, `name`=? where `id`=?",
-                    [$cc['parent_id'], $cc['target_weight'], $cc['ord'], $color, $cc['name'], $uc->id]);
+                             `ord`=?, `color`=?, `name`=?, `locked`=? where `id`=?",
+                    [$cc['parent_id'], $cc['target_weight'], $cc['ord'], $color, $cc['name'], $cc['locked'], $uc->id]);
             } elseif (!$cc) {
                 // удалилась привязка
                 DB::delete("delete from `user_categories` where `id` = ?", [$uc->id]);
@@ -82,8 +83,8 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.id,
                 }
 
                 DB::insert("insert into `user_categories` (`user_id`, `parent_id`, `asset_id`,
-                               `name`, `target_weight`, `ord`) values (?,?,?,?,?,?)",
-                    [Auth::id(), $cc['parent_id'], $assetId, $catName, $cc['target_weight'], $cc['ord']]);
+                               `name`, `target_weight`, `ord`, `locked`) values (?,?,?,?,?,?,?)",
+                    [Auth::id(), $cc['parent_id'], $assetId, $catName, $cc['target_weight'], $cc['ord'], $cc['locked']]);
             }
         }
 

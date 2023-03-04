@@ -132,6 +132,7 @@ export default {
                 name: this.addRowName,
                 target_weight: this.addRowTargetWeight,
                 ord: 999,
+                locked: 0,
             });
 
             this.addRowName = '';
