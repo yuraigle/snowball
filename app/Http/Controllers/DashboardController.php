@@ -35,11 +35,31 @@ select
     sum(`amount`) as cnt,
     sum(`amount` * uh.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_spent,
     sum(`amount`) * max(a.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_now,
+    (a.price - ah1.close) / ah1.close as 1D,
+    (a.price - ah3.close) / ah3.close as 3D,
+    (a.price - ah7.close) / ah7.close as 7D,
+    (a.price - ah30.close) / ah30.close as 30D,
     ifnull(uc.ord, 0) as ord
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
     left join `assets` usd on usd.ticker = 'USDFIX'
     left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
+    left join (
+        select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
+        from asset_history where date <= date_sub(now(), interval 1 day)
+    ) ah1 on ah1.asset_id = a.id and ah1.d = 1
+    left join (
+        select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
+        from asset_history where date <= date_sub(now(), interval 3 day)
+    ) ah3 on ah3.asset_id = a.id and ah3.d = 1
+    left join (
+        select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
+        from asset_history where date <= date_sub(now(), interval 7 day)
+    ) ah7 on ah7.asset_id = a.id and ah7.d = 1
+    left join (
+        select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
+        from asset_history where date <= date_sub(now(), interval 30 day)
+    ) ah30 on ah30.asset_id = a.id and ah30.d = 1
 where uc.`user_id` = ?
 group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.name,
          a.ticker, a.price, a.currency, usd.price

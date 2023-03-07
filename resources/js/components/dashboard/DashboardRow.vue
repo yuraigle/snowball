@@ -25,6 +25,23 @@
             <div class="p-0 small fw-bold">{{ formatPrice(c['ttl_now'], 'RUB') }}</div>
             <div class="p-0 small text-muted">{{ formatPrice(c['ttl_spent'], 'RUB') }}</div>
         </td>
+
+        <td>
+            <span v-if="c['1D'] > 0" class="small text-success">+{{ formatPercent(c['1D'] * 100) }}</span>
+            <span v-else-if="c['1D'] < 0" class="small text-danger">{{ formatPercent(c['1D'] * 100) }}</span>
+            <span v-else class="small text-muted">0%</span>
+        </td>
+        <td>
+            <span v-if="c['3D'] > 0" class="small text-success">+{{ formatPercent(c['3D'] * 100) }}</span>
+            <span v-else-if="c['3D'] < 0" class="small text-danger">{{ formatPercent(c['3D'] * 100) }}</span>
+            <span v-else class="small text-muted">0%</span>
+        </td>
+        <td>
+            <span v-if="c['7D'] > 0" class="small text-success">+{{ formatPercent(c['7D'] * 100) }}</span>
+            <span v-else-if="c['7D'] < 0" class="small text-danger">{{ formatPercent(c['7D'] * 100) }}</span>
+            <span v-else class="small text-muted">0%</span>
+        </td>
+
         <td class="small">
             <div v-if="c['ttl_now'] > c['ttl_spent']" class="text-success">
                 <div class="p-0 small">

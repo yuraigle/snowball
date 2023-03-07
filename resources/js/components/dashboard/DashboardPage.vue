@@ -18,6 +18,9 @@
                         </a>
                     </th>
                     <th style="width: 130px">Стоимость</th>
+                    <th style="width: 50px">1D</th>
+                    <th style="width: 50px">3D</th>
+                    <th style="width: 50px">7D</th>
                     <th style="width: 130px">Доход</th>
                     <th style="width: 100px">Доля</th>
                 </tr>
