@@ -26,20 +26,20 @@
                     <span v-else>Продажа</span>
                 </td>
                 <td>{{ tx['deal_date'] }}</td>
-                <td>{{ Math.round(tx['amount']) }}</td>
-                <td>{{ formatPrice(tx['price']) }}</td>
-                <td>{{ formatPrice(tx['commission']) }}</td>
-                <td>{{ formatPrice(tx['amount'] * tx['price'] + 1 * tx['commission']) }}</td>
+                <td>{{ parseFloat(tx['amount']) }}</td>
+                <td>{{ formatPrice(tx['price'], tx['currency']) }}</td>
+                <td>{{ formatPrice(tx['commission'], tx['currency']) }}</td>
+                <td>{{ formatPrice(tx['amount'] * tx['price'] + 1 * tx['commission'], tx['currency']) }}</td>
                 <td>
                     <span v-if="calcProfit(tx['amount'], tx['price'], tx['commission']) >= 0"
                           class="text-success small">
                         <i class="fa-solid fa-fw fa-chevron-up"></i>
-                        +{{ formatPrice(calcProfit(tx['amount'], tx['price'], tx['commission'])) }}
+                        +{{ formatPrice(calcProfit(tx['amount'], tx['price'], tx['commission']), tx['currency']) }}
                         ( {{ formatPercent(calcProfitPercent(tx['amount'], tx['price'], tx['commission'])) }} )
                     </span>
                     <span v-else class="text-danger small">
                         <i class="fa-solid fa-fw fa-chevron-down"></i>
-                        {{ formatPrice(calcProfit(tx['amount'], tx['price'], tx['commission'])) }}
+                        {{ formatPrice(calcProfit(tx['amount'], tx['price'], tx['commission']), tx['currency']) }}
                         ( {{ formatPercent(calcProfitPercent(tx['amount'], tx['price'], tx['commission'])) }} )
                     </span>
 

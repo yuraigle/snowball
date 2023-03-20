@@ -105,10 +105,10 @@ export default {
                     const tx = x[0];
                     this.deal_type = tx.deal_type;
                     this.deal_date = tx.deal_date;
-                    this.amount = Math.round(tx.amount);
-                    this.price = parseFloat(tx.price).toFixed(2);
+                    this.amount = parseFloat(tx.amount);
+                    this.price = parseFloat(tx.price);
                     this.currency = tx.currency;
-                    this.commission = parseFloat(tx.commission).toFixed(2);
+                    this.commission = parseFloat(tx.commission);
                 }
             }
         })

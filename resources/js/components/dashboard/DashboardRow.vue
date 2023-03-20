@@ -27,18 +27,18 @@
         </td>
 
         <td>
-            <span v-if="c['1D'] > 0" class="small text-success">+{{ formatPercent(c['1D'] * 100) }}</span>
-            <span v-else-if="c['1D'] < 0" class="small text-danger">{{ formatPercent(c['1D'] * 100) }}</span>
+            <span v-if="parseFloat(c['1D']) < parseFloat(c['price'])" class="small text-success">+{{ formatPercent((c['price'] - c['1D']) / c['1D'] * 100) }}</span>
+            <span v-else-if="parseFloat(c['1D']) > parseFloat(c['price'])" class="small text-danger">{{ formatPercent((c['price'] - c['1D']) / c['1D'] * 100) }}</span>
             <span v-else class="small text-muted">0%</span>
         </td>
         <td>
-            <span v-if="c['3D'] > 0" class="small text-success">+{{ formatPercent(c['3D'] * 100) }}</span>
-            <span v-else-if="c['3D'] < 0" class="small text-danger">{{ formatPercent(c['3D'] * 100) }}</span>
+            <span v-if="parseFloat(c['3D']) < parseFloat(c['price'])" class="small text-success">+{{ formatPercent((c['price'] - c['3D']) / c['3D'] * 100) }}</span>
+            <span v-else-if="parseFloat(c['3D']) > parseFloat(c['price'])" class="small text-danger">{{ formatPercent((c['price'] - c['3D']) / c['3D'] * 100) }}</span>
             <span v-else class="small text-muted">0%</span>
         </td>
         <td>
-            <span v-if="c['7D'] > 0" class="small text-success">+{{ formatPercent(c['7D'] * 100) }}</span>
-            <span v-else-if="c['7D'] < 0" class="small text-danger">{{ formatPercent(c['7D'] * 100) }}</span>
+            <span v-if="parseFloat(c['7D']) < parseFloat(c['price'])" class="small text-success">+{{ formatPercent((c['price'] - c['7D']) / c['7D'] * 100) }}</span>
+            <span v-else-if="parseFloat(c['7D']) > parseFloat(c['price'])" class="small text-danger">{{ formatPercent((c['price'] - c['7D']) / c['7D'] * 100) }}</span>
             <span v-else class="small text-muted">0%</span>
         </td>
 

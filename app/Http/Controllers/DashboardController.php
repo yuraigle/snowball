@@ -35,10 +35,9 @@ select
     sum(`amount`) as cnt,
     sum(`amount` * uh.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_spent,
     sum(`amount`) * max(a.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_now,
-    (a.price - ah1.close) / ah1.close as 1D,
-    (a.price - ah3.close) / ah3.close as 3D,
-    (a.price - ah7.close) / ah7.close as 7D,
-    (a.price - ah30.close) / ah30.close as 30D,
+    ah1.close as 1D,
+    ah3.close as 3D,
+    ah7.close as 7D,
     ifnull(uc.ord, 0) as ord
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
@@ -56,10 +55,6 @@ from `user_categories` uc
         select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
         from asset_history where date <= date_sub(now(), interval 7 day)
     ) ah7 on ah7.asset_id = a.id and ah7.d = 1
-    left join (
-        select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
-        from asset_history where date <= date_sub(now(), interval 30 day)
-    ) ah30 on ah30.asset_id = a.id and ah30.d = 1
 where uc.`user_id` = ?
 group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.name,
          a.ticker, a.price, a.currency, usd.price
