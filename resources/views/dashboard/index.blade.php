@@ -5,8 +5,8 @@
 @section('content')
     <div class="mb-4 p-2 fw-bold d-flex flex-row justify-content-center">
         <div class="text-primary">USD: {{ number_format($indexes['USDFIX'], 2) }}</div>
+        <div class="text-info ms-4">S&P500: {{ number_format($indexes['SP500']) }}</div>
         <div class="text-success ms-4">IMOEX: {{ number_format($indexes['IMOEX']) }}</div>
-        <div class="text-dark ms-4">RTSI: {{ number_format($indexes['RTSI']) }}</div>
         <div class="text-warning ms-4">BTC: {{ number_format($indexes['BTC']) }}</div>
     </div>
     <div id="app">

@@ -66,7 +66,7 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.nam
         }
 
         $indexes = [];
-        $rows = DB::select("select ticker, price from assets where ticker in ('USDFIX', 'IMOEX', 'RTSI', 'BTC')");
+        $rows = DB::select("select ticker, price from assets where ticker in ('USDFIX', 'IMOEX', 'SP500', 'BTC')");
         foreach ($rows as $row) {
             $indexes[$row->ticker] = floatval($row->price);
         }

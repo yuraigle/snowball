@@ -12,8 +12,8 @@ class AssetYahooUpdateCommand extends Command
 
     public function handle()
     {
-        $tickers = ['VT', 'BTC-USD', 'ETH-USD', 'BNB-USD', 'MATIC-USD', 'XMR-USD'];
-        $url = 'https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=' . join('%2C', $tickers);
+        $tickers = ['VT', 'BTC-USD', 'ETH-USD', 'BNB-USD', 'MATIC-USD', 'XMR-USD', '^GSPC'];
+        $url = 'https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=' . urlencode(join(',', $tickers));
 
         $curl = curl_init();
 
@@ -45,6 +45,11 @@ class AssetYahooUpdateCommand extends Command
 
         foreach ($json["quoteResponse"]["result"] as $s) {
             $ticker = preg_replace("|-USD$|", "", $s['symbol']);
+
+            if (str_contains($ticker, "GSPC")) {
+                $ticker = "SP500";
+            }
+
             $results[$ticker] = $s;
         }
 
