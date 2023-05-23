@@ -55,11 +55,17 @@
             <div class="col-lg-4">
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Прибыль:</span>
-                    <span class="float-end text-danger">-562.50 ₽ ( -2.2% )</span>
+                    <span class="float-end {{ $ttlByUserAsset > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
+                        {{ number_format($ttlByUserAsset - $stats->ttl_spent_rub) }} ₽
+                        ( {{ number_format(($ttlByUserAsset - $stats->ttl_spent_rub) / $stats->ttl_spent_rub * 100, 2) }}% )
+                    </span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Рост цены:</span>
-                    <span class="float-end text-danger">-562.50 ₽ ( -2.2% )</span>
+                    <span class="float-end {{ $ttlByUserAsset > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
+                        {{ number_format($ttlByUserAsset - $stats->ttl_spent_rub) }} ₽
+                        ( {{ number_format(($ttlByUserAsset - $stats->ttl_spent_rub) / $stats->ttl_spent_rub * 100, 2) }}% )
+                    </span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Дивиденды:</span>
