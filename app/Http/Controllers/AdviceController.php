@@ -39,7 +39,7 @@ select
     (a.price - ah7.close) / ah7.close as 7D,
     (a.price - ah30.close) / ah30.close as 30D,
     uc.locked,
-    sum(`amount`) * max(a.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_now
+    sum(`amount`) * max(a.price) * if(a.currency = 'USD', usd.price, 1) as ttl_now
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
     left join `assets` usd on usd.ticker = 'USDFIX'
@@ -202,6 +202,39 @@ order by isnull(uc.parent_id) desc, isnull(a.ticker) desc, a.ticker
         return view("advice.index", compact('stats', 'add', 'sumToSpend'));
     }
 
+    public function test(): Factory|View|Application
+    {
+        $sql = <<<SQL
+select
+    uc.id,
+    uc.parent_id,
+    ifnull(uc.name, a.name) as name,
+    a.ticker,
+    a.price,
+    sum(`amount`) * a.price * if(a.currency = 'USD', usd.price, 1) as ttl_now,
+    uc.target_weight
+from `user_categories` uc
+    left join `assets` a on a.id = uc.asset_id
+    left join `assets` usd on usd.ticker = 'USDFIX'
+    left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
+where uc.`user_id` = ?
+group by a.id, a.ticker, a.price, a.currency, usd.price, uc.id, a.name, uc.name,
+         uc.parent_id, uc.target_weight
+order by uc.parent_id, uc.target_weight desc
+SQL;
+
+        $stats = DB::select($sql, [Auth::id()]);
+        $arr = [];
+        foreach ($stats as $row) {
+            $row->ttl_now = $this->calcTotalNow($stats, $row->id);
+            $arr[$row->id] = $row;
+        }
+
+        print_r($arr);
+
+        return view("advice.test", compact('arr', 'stats'));
+    }
+
     private function getStatById($stats, $id)
     {
         foreach ($stats as $stat) {
@@ -235,7 +268,13 @@ order by isnull(uc.parent_id) desc, isnull(a.ticker) desc, a.ticker
             if ($s['toBuy'] > 0) {
                 DB::insert("insert into `user_holdings` (user_id, asset_id, amount, price, currency)
                             values (?, ?, ?, ?, ?)",
-                    [1, $s['aid'], floatval($s['toBuy']) * floatval($s['lot']), floatval($s['price']), 'RUB']);
+                    [
+                        1,
+                        $s['aid'],
+                        floatval($s['toBuy']) * floatval($s['lot']),
+                        floatval($s['price']),
+                        'RUB'
+                    ]);
             }
         }
 

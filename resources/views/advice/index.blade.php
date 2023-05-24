@@ -5,7 +5,7 @@
 @section('content')
     <h1 class="h3">Рекоммендации</h1>
 
-    <div class="container" style="width: 650px; margin: 0 auto">
+    <div class="container" style="width: 800px; margin: 0 auto">
         <form class="d-flex mb-3">
             <div class="me-2">
                 <label for="x" class="col-form-label">Введите сумму пополнения:</label>
