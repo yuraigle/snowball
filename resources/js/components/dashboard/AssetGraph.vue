@@ -20,7 +20,6 @@ export default {
         const avgPriceLine = {
             price: window.avgPrice,
             color: '#ce6f28',
-            title: 'Средняя',
         };
 
         lineSeries.createPriceLine(avgPriceLine);
