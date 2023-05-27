@@ -26,8 +26,8 @@
                 <th>Актив</th>
                 <th>Категория</th>
                 <th class="text-center" style="width: 50px">1D</th>
-                <th class="text-center" style="width: 50px">3D</th>
                 <th class="text-center" style="width: 50px">7D</th>
+                <th class="text-center" style="width: 50px">30D</th>
                 <th>Купить</th>
             </tr>
             </thead>
@@ -58,19 +58,6 @@
                         @endif
                     </td>
                     <td>
-                        @if(floatval($stat->{'3D'}) > 0)
-                            <span class="small text-success">
-                                +{{ number_format(floatval($stat->{'3D'}) * 100.0, 2) }}%
-                            </span>
-                        @elseif(floatval($stat->{'3D'}) < 0)
-                            <span class="small text-danger">
-                                {{ number_format(floatval($stat->{'3D'}) * 100.0, 2) }}%
-                            </span>
-                        @else
-                            <span class="small text-muted">0.00%</span>
-                        @endif
-                    </td>
-                    <td>
                         @if(floatval($stat->{'7D'}) > 0)
                             <span class="small text-success">
                                 +{{ number_format(floatval($stat->{'7D'}) * 100.0, 2) }}%
@@ -84,24 +71,26 @@
                         @endif
                     </td>
                     <td>
-                        @if($stat->toBuy > 0)
-                            <div>{{ $stat->toBuy * $stat->lot }} шт.</div>
-                            <div class="small text-muted">
-                                ₽ {{ number_format(floatval($stat->price * $stat->toBuy * $stat->lot), 2) }}
-                            </div>
+                        @if(floatval($stat->{'30D'}) > 0)
+                            <span class="small text-success">
+                                +{{ number_format(floatval($stat->{'30D'}) * 100.0, 2) }}%
+                            </span>
+                        @elseif(floatval($stat->{'30D'}) < 0)
+                            <span class="small text-danger">
+                                {{ number_format(floatval($stat->{'30D'}) * 100.0, 2) }}%
+                            </span>
+                        @else
+                            <span class="small text-muted">0.00%</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if($stat->to_add > 0)
+                            <div>{{ number_format(floatval($stat->to_add)) }} ₽</div>
                         @endif
                     </td>
                 </tr>
             @endforeach
-            <tfoot>
-            <tr class="bg-light">
-                <td colspan="6">Сумма покупок:</td>
-                <td>₽ {{ number_format(floatval($sumToSpend), 2) }}</td>
-            </tr>
-            </tfoot>
         </table>
-
-        <button type="button" class="btn btn-outline-secondary" onclick="onClick()">Купил</button>
     </div>
 
     <style>
@@ -111,17 +100,4 @@
             height: 55px;
         }
     </style>
-
-    <script type="text/javascript">
-        const stats = @json($stats);
-        function onClick() {
-            axios.post("/advice/ok", stats)
-                .then(() => {
-                    window.location.reload();
-                })
-                .catch(err => {
-                    console.error(err);
-                })
-        }
-    </script>
 @endsection

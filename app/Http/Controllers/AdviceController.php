@@ -8,7 +8,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
@@ -20,38 +19,28 @@ class AdviceController extends BaseController
 
     public function index(Request $req): Factory|View|Application
     {
-
-        $stats = DB::select("
+        $sql = <<<SQL
 select
     uc.id,
     uc.parent_id,
     ifnull(uc.name, a.name) as name,
-    a.id as aid,
     a.ticker,
     a.price,
-    a.currency,
-    a.lot,
-    uc.ord,
-    uc.target_weight / 100 as target_weight,
-    uc.target_weight / 100 as calc_target_weight,
-    (a.price - ah1.close) / ah1.close as 1D,
-    (a.price - ah3.close) / ah3.close as 3D,
-    (a.price - ah7.close) / ah7.close as 7D,
-    (a.price - ah30.close) / ah30.close as 30D,
+    sum(`amount`) * a.price * if(a.currency = 'USD', usd.price, 1) as ttl_now,
+    uc.target_weight,
     uc.locked,
-    sum(`amount`) * max(a.price) * if(a.currency = 'USD', usd.price, 1) as ttl_now
+    (a.price - ah1.close) / ah1.close as 1D,
+    (a.price - ah7.close) / ah7.close as 7D,
+    (a.price - ah30.close) / ah30.close as 30D
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
     left join `assets` usd on usd.ticker = 'USDFIX'
     left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
+
     left join (
         select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
         from asset_history where date <= date_sub(now(), interval 1 day)
     ) ah1 on ah1.asset_id = a.id and ah1.d = 1
-    left join (
-        select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
-        from asset_history where date <= date_sub(now(), interval 3 day)
-    ) ah3 on ah3.asset_id = a.id and ah3.d = 1
     left join (
         select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
         from asset_history where date <= date_sub(now(), interval 7 day)
@@ -61,189 +50,72 @@ from `user_categories` uc
         from asset_history where date <= date_sub(now(), interval 30 day)
     ) ah30 on ah30.asset_id = a.id and ah30.d = 1
 where uc.`user_id` = ?
-group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.locked, a.name, a.id,
-         a.lot, a.ticker, a.price, a.currency, usd.price
-order by isnull(uc.parent_id) desc, isnull(a.ticker) desc, a.ticker
-", [Auth::id()]);
-
-        $totalSum = 0;
-        foreach ($stats as $row) {
-            if ($row->aid) {
-                $totalSum += $row->ttl_now;
-            }
-        }
-
-        $add = $req->get("x", 15000);
-        $nextSum = $totalSum + $add;
-
-        // calc_target_weight - целевой вес для каждого актива
-        foreach ($stats as $s) {
-            $s->level = 0;
-            if ($s->parent_id) {
-                $parentId = $s->parent_id;
-                while ($parentId != null) {
-                    $s->level++;
-                    $parent = $this->getStatById($stats, $parentId);
-                    $parentId = $parent->parent_id;
-                    $s->calc_target_weight *= $parent->target_weight;
-                }
-            }
-        }
-
-        // sum_to_add - сколько надо добавить до целевого распределения
-        foreach ($stats as $s) {
-            $s->ttl_now = $this->calcTotalNow($stats, $s->id);
-            $s->current_weight = $s->ttl_now / $totalSum * 100;
-            $s->sum_to_add = $s->calc_target_weight * $nextSum - $s->ttl_now;
-            $s->sum2_to_add = 0;
-            if ($s->locked) {
-                $s->sum_to_add = 0;
-            }
-        }
-
-        // sum2_to_add - сколько добавить из 100р
-        $root = array_filter($stats, function ($s) {
-            return !$s->parent_id;
-        });
-
-        $x = 0;
-        foreach ($root as $s) {
-            if ($s->sum_to_add > 0) {
-                $x += $s->sum_to_add;
-            }
-        }
-        foreach ($root as $s) {
-            if ($s->sum_to_add > 0) {
-                $s->sum2_to_add = $s->sum_to_add / $x * $add;
-                $s->parent_name = "";
-            }
-        }
-
-        for ($i = 0; $i < 10; $i++) {
-            $filtered = array_filter($stats, function ($s) use ($i) {
-                return $s->level == $i;
-            });
-
-            foreach ($filtered as $s) {
-                $children = array_filter($stats, function ($s1) use ($s) {
-                    return $s1->parent_id == $s->id;
-                });
-
-                $x = 0;
-                foreach ($children as $child) {
-                    $child->parent_name = $s->name;
-                    if ($s->sum2_to_add <= 0) {
-                        $child->sum2_to_add = 0;
-                    } elseif ($child->sum_to_add > 0) {
-                        $x += $child->sum_to_add;
-                    }
-                }
-
-                foreach ($children as $child) {
-                    if ($child->sum_to_add > 0 && $s->sum2_to_add > 0) {
-                        $child->sum2_to_add = $child->sum_to_add / $x * $s->sum2_to_add;
-                    } else {
-                        $child->sum2_to_add = 0;
-                    }
-                }
-            }
-        }
-
-        $stats = array_filter($stats, function ($s) {
-            return $s->ticker && $s->sum2_to_add > 0;
-        });
-
-        usort($stats, function ($a, $b) {
-            return
-                [-$a->sum2_to_add]
-                <=>
-                [-$b->sum2_to_add];
-        });
-
-        $rest = $add;
-        foreach ($stats as $s) {
-            $s->toBuy = 0;
-            if ($s->price * $s->lot <= $rest) {
-                $s->toBuy = floor(min($s->sum2_to_add, $rest) / ($s->price * $s->lot));
-                if ($s->toBuy < 1) {
-                    $s->toBuy = 1;
-                }
-            }
-            $rest -= $s->toBuy * $s->price * $s->lot;
-        }
-
-        usort($stats, function ($a, $b) {
-            return
-                [-$a->price * $b->lot]
-                <=>
-                [-$b->price * $b->lot];
-        });
-
-        foreach ($stats as $s) {
-            if ($s->price * $s->lot <= $rest) {
-                $toBuy = floor($rest / ($s->price * $s->lot));
-                $rest -= $toBuy * $s->price * $s->lot;
-                $s->toBuy += $toBuy;
-            }
-        }
-
-        usort($stats, function ($a, $b) {
-            return
-                [-$a->sum2_to_add]
-                <=>
-                [-$b->sum2_to_add];
-        });
-
-        $sumToSpend = array_reduce($stats, function ($r, $s) {
-            $r += $s->toBuy * $s->price * $s->lot;
-            return $r;
-        });
-
-        return view("advice.index", compact('stats', 'add', 'sumToSpend'));
-    }
-
-    public function test(): Factory|View|Application
-    {
-        $sql = <<<SQL
-select
-    uc.id,
-    uc.parent_id,
-    ifnull(uc.name, a.name) as name,
-    a.ticker,
-    a.price,
-    sum(`amount`) * a.price * if(a.currency = 'USD', usd.price, 1) as ttl_now,
-    uc.target_weight
-from `user_categories` uc
-    left join `assets` a on a.id = uc.asset_id
-    left join `assets` usd on usd.ticker = 'USDFIX'
-    left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
-where uc.`user_id` = ?
 group by a.id, a.ticker, a.price, a.currency, usd.price, uc.id, a.name, uc.name,
-         uc.parent_id, uc.target_weight
+         uc.parent_id, uc.target_weight, uc.locked
 order by uc.parent_id, uc.target_weight desc
 SQL;
 
         $stats = DB::select($sql, [Auth::id()]);
-        $arr = [];
+
         foreach ($stats as $row) {
+            $row->level = 0;
+            $row->to_add = 0;
             $row->ttl_now = $this->calcTotalNow($stats, $row->id);
-            $arr[$row->id] = $row;
         }
 
-        print_r($arr);
+        foreach ($stats as $row) {
+            $sumInGroup = array_reduce($stats, function ($a, $b) use ($row) {
+                return $a + ($b->parent_id == $row->parent_id ? $b->ttl_now : 0);
+            });
+            $row->curr_weight = $row->ttl_now / $sumInGroup * 100;
 
-        return view("advice.test", compact('arr', 'stats'));
-    }
+            if (!$row->parent_id) {
+                $row->level = 1;
+                $row->parent_id = 0;
+                $row->parent_name = '';
+            }
 
-    private function getStatById($stats, $id)
-    {
-        foreach ($stats as $stat) {
-            if ($stat->id == $id) {
-                return $stat;
+            if ($row->level) {
+                $children = array_filter($stats, function ($a) use ($row) {
+                    return $a->parent_id == $row->id;
+                });
+
+                array_map(function ($a) use ($row) {
+                    $a->level = $row->level + 1;
+                    $a->parent_name = $row->name;
+                }, $children);
             }
         }
 
-        return null;
+        $add = $req->query("x", 15000);
+
+        $this->allocateChildren(0, $stats, $add);
+        $this->allocateChildren(24, $stats);
+        $this->allocateChildren(25, $stats);
+        $this->allocateChildren(1, $stats);
+        $this->allocateChildren(2, $stats);
+        $this->allocateChildren(3, $stats);
+        $this->allocateChildren(4, $stats);
+
+        $stats = array_filter($stats, function ($row) {
+            return $row->to_add > 0 && $row->ticker;
+        });
+
+        $s = array_reduce($stats, function ($a, $b) {
+            return $a + $b->to_add;
+        });
+        array_map(function ($a) use ($s, $add) {
+            $a->to_add = $a->to_add / $s * $add;
+        }, $stats);
+
+        usort($stats, function ($a, $b) {
+            return
+                [-$a->to_add]
+                <=>
+                [-$b->to_add];
+        });
+
+        return view("advice.test", compact('stats', 'add'));
     }
 
     private function calcTotalNow($stats, $id): float
@@ -262,22 +134,41 @@ SQL;
         return $totalNow;
     }
 
-    public function ok(Request $req): JsonResponse
+    private function allocateChildren($parentId, $stats, $limit = 0)
     {
-        foreach ($req->post() as $s) {
-            if ($s['toBuy'] > 0) {
-                DB::insert("insert into `user_holdings` (user_id, asset_id, amount, price, currency)
-                            values (?, ?, ?, ?, ?)",
-                    [
-                        1,
-                        $s['aid'],
-                        floatval($s['toBuy']) * floatval($s['lot']),
-                        floatval($s['price']),
-                        'RUB'
-                    ]);
+        if ($parentId) {
+            $parent = array_filter($stats, function ($a) use ($parentId) {
+                return $a->id == $parentId;
+            });
+            $limit = array_values($parent)[0]->to_add;
+        }
+
+        $children = array_filter($stats, function ($a) use ($parentId) {
+            return $a->parent_id == $parentId;
+        });
+
+        $parentTtl = array_reduce($children, function ($a, $b) {
+            return $a + $b->ttl_now;
+        });
+        $parentTtl += $limit;
+
+        $sumToAllocate = 0;
+        foreach ($children as $row) {
+            if ($row->locked) {
+                $row->to_add = 0;
+            } elseif ($row->ttl_now / $parentTtl * 100 >= $row->target_weight) {
+                $row->to_add = 0;
+            } else {
+                $row->to_add = $row->target_weight / 100 * $parentTtl - $row->ttl_now;
+                $sumToAllocate += $row->to_add;
             }
         }
 
-        return response()->json("OK");
+        foreach ($children as $row) {
+            if ($sumToAllocate) {
+                $x = $row->to_add / $sumToAllocate * $limit;
+                $row->to_add = $x > 500 ? $x : 0;
+            }
+        }
     }
 }

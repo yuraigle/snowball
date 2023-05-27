@@ -32,7 +32,3 @@ Route::post('/transaction', [DashboardController::class, 'transaction'])->middle
 Route::get('/categories', [CategoriesController::class, 'index'])->middleware('auth');
 Route::post('/categories/update', [CategoriesController::class, 'update'])->middleware('auth');
 Route::get('/advice', [AdviceController::class, 'index'])->middleware('auth');
-
-Route::get('/advice/test', [AdviceController::class, 'test'])->middleware('auth');
-
-Route::post('/advice/ok', [AdviceController::class, 'ok'])->name('ok-test');
