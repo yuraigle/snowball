@@ -55,14 +55,16 @@
             <div class="col-lg-4">
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Прибыль:</span>
-                    <span class="float-end {{ $ttlByUserAsset > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
+                    <span
+                        class="float-end {{ $ttlByUserAsset > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
                         {{ number_format($ttlByUserAsset - $stats->ttl_spent_rub) }} ₽
                         ( {{ number_format(($ttlByUserAsset - $stats->ttl_spent_rub) / $stats->ttl_spent_rub * 100, 2) }}% )
                     </span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Рост цены:</span>
-                    <span class="float-end {{ $ttlByUserAsset > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
+                    <span
+                        class="float-end {{ $ttlByUserAsset > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
                         {{ number_format($ttlByUserAsset - $stats->ttl_spent_rub) }} ₽
                         ( {{ number_format(($ttlByUserAsset - $stats->ttl_spent_rub) / $stats->ttl_spent_rub * 100, 2) }}% )
                     </span>
@@ -76,6 +78,7 @@
     @endif
 
     <div id="app">
+        <asset-graph></asset-graph>
         <transactions-table></transactions-table>
     </div>
 
@@ -87,5 +90,7 @@
         window.asset_id = {{ $asset->id }};
         window.asset_price = {{ $asset->price }};
         window.asset_currency = @json($asset->currency);
+        window.series = @json($series);
+        window.avgPrice = {{ $stats->ttl_spent / $stats->cnt }};
     </script>
 @endsection

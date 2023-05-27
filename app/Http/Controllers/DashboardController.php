@@ -130,9 +130,22 @@ where user_id = ? and asset_id = ?
 group by usd.price, a.currency
 ", [Auth::id(), $asset->id]);
 
+        ;
+
+
+        $res2 = DB::select(<<<SQL
+select `date`, `close` from `asset_history` where `asset_id`=? and `date` >= '2023.03.01'
+SQL, [$asset->id]);
+
+        $series = [];
+        foreach ($res2 as $row) {
+            $series[] = ["time" => $row->date, "value" => floatval($row->close)];
+        }
+
         return view("dashboard.asset", [
             'asset' => $asset,
             'transactions' => $tx,
+            'series' => $series,
             'stats' => !empty($stats) ? $stats[0] : null,
             'ttlByUser' => $this->sumByUser(Auth::id()),
             'ttlByUserAsset' => $this->sumByUserAsset(Auth::id(), $asset->id)
