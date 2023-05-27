@@ -115,7 +115,7 @@ SQL;
                 [-$b->to_add];
         });
 
-        return view("advice.test", compact('stats', 'add'));
+        return view("advice.index", compact('stats', 'add'));
     }
 
     private function calcTotalNow($stats, $id): float
@@ -152,22 +152,38 @@ SQL;
         });
         $parentTtl += $limit;
 
-        $sumToAllocate = 0;
+        $hasUnderweight = 0;
         foreach ($children as $row) {
+            $row->is_underweight = 0;
+
             if ($row->locked) {
                 $row->to_add = 0;
-            } elseif ($row->ttl_now / $parentTtl * 100 >= $row->target_weight) {
-                $row->to_add = 0;
             } else {
+                if ($row->ttl_now / $parentTtl * 100 < $row->target_weight) {
+                    $row->is_underweight = 1;
+                    $hasUnderweight = 1;
+                }
+
                 $row->to_add = $row->target_weight / 100 * $parentTtl - $row->ttl_now;
-                $sumToAllocate += $row->to_add;
             }
         }
+
+        if ($hasUnderweight) {
+            foreach ($children as $row) {
+                if (!$row->is_underweight) {
+                    $row->to_add = 0;
+                }
+            }
+        }
+
+        $sumToAllocate = array_reduce($children, function ($a, $b) {
+            return $a + $b->to_add;
+        });
 
         foreach ($children as $row) {
             if ($sumToAllocate) {
                 $x = $row->to_add / $sumToAllocate * $limit;
-                $row->to_add = $x > 500 ? $x : 0;
+                $row->to_add = $x > 100 ? $x : 0;
             }
         }
     }
