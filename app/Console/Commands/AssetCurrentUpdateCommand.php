@@ -16,7 +16,7 @@ class AssetCurrentUpdateCommand extends Command
         $links = [
             "https://iss.moex.com/iss/engines/stock/markets/shares/boards/tqbr/securities.json", // stocks
             "https://iss.moex.com/iss/engines/stock/markets/shares/boards/tqtf/securities.json", // etf
-            "https://iss.moex.com/iss/engines/stock/markets/shares/boards/tqtd/securities.json", // etf-usd
+//            "https://iss.moex.com/iss/engines/stock/markets/shares/boards/tqtd/securities.json", // etf-usd
             "https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities.json", // index
             "https://iss.moex.com/iss/engines/stock/markets/index/boards/RTSI/securities.json", // index
             "https://iss.moex.com/iss/engines/currency/markets/index/securities.json", // currency
@@ -47,6 +47,18 @@ class AssetCurrentUpdateCommand extends Command
             if (!empty($results[$ticker])) {
                 DB::update("update `assets` set `price`=?, `updated_at` = now() where `id`=?",
                     [$results[$ticker], $aid]);
+
+                $date = date('Y-m-d');
+                $exists = DB::selectOne("select count(*) as c from `asset_history` where `asset_id` = ? and `date` = ?",
+                    [$aid, $date]);
+
+                if ($exists->c) {
+                    DB::update("update `asset_history` set `close`=?, `updated_at` = now()
+                            where `date`=? and `asset_id`=? and `low` is null", [$results[$ticker], $date, $aid]);
+                } else {
+                    DB::insert("insert into `asset_history` (`asset_id`, `close`, `date`)
+                            values (?, ?, ?)", [$aid, $results[$ticker], $date]);
+                }
             }
         }
 

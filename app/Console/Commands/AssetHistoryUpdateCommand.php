@@ -19,7 +19,6 @@ class AssetHistoryUpdateCommand extends Command
             "https://iss.moex.com/iss/history/engines/stock/markets/shares/boards/tqbr/securities.json?start=200",
             "https://iss.moex.com/iss/history/engines/stock/markets/shares/boards/tqtf/securities.json",
             "https://iss.moex.com/iss/history/engines/stock/markets/shares/boards/tqtf/securities.json?start=100",
-            "https://iss.moex.com/iss/history/engines/stock/markets/shares/boards/tqtd/securities.json",
             "https://iss.moex.com/iss/history/engines/currency/markets/index/securities.json",
         ];
 

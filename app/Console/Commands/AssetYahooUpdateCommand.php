@@ -67,30 +67,6 @@ class AssetYahooUpdateCommand extends Command
             if ($s['regularMarketPrice']) {
                 DB::update("update `assets` set `price`=?, `updated_at` = now() where `id`=?",
                     [$s['regularMarketPrice'], $aid]);
-
-                $date = date("Y-m-d", $s["regularMarketTime"]);
-                $dateMinus1 = date("Y-m-d", $s["regularMarketTime"] - 60 * 60 * 24);
-
-                $exists = DB::selectOne("select count(*) as c from `asset_history` where `asset_id` = ? and `date` = ?",
-                    [$aid, $date]);
-
-                $ohlc = [
-                    $s["regularMarketOpen"],
-                    $s["regularMarketDayHigh"],
-                    $s["regularMarketDayLow"],
-                    $s["regularMarketPrice"],
-                ];
-
-                if ($exists->c) {
-                    DB::update("update `asset_history` set `open`=?, `high`=?, `low`=?, `close`=?, updated_at=now()
-                            where `date`=? and `asset_id`=?", [...$ohlc, $date, $aid]);
-                } else {
-                    DB::insert("insert into `asset_history` (`asset_id`, `open`, `high`, `low`, `close`, `date`)
-                            values (?, ?, ?, ?, ?, ?)", [$aid, ...$ohlc, $date]);
-                }
-
-                DB::update("update `asset_history` set `close`=?, updated_at=now() where `date`=? and `asset_id`=?",
-                    [$s["regularMarketPreviousClose"], $dateMinus1, $aid]);
             }
         }
 

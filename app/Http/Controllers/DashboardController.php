@@ -130,11 +130,9 @@ where user_id = ? and asset_id = ?
 group by usd.price, a.currency
 ", [Auth::id(), $asset->id]);
 
-        ;
-
 
         $res2 = DB::select(<<<SQL
-select `date`, `close` from `asset_history` where `asset_id`=? and `date` >= '2023.03.01'
+select `date`, `close` from `asset_history` where `asset_id`=? and `date` >= '2023.01.01'
 SQL, [$asset->id]);
 
         $series = [];
