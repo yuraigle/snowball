@@ -17,11 +17,18 @@
             <div class="col-lg-4">
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Кол-во:</span>
-                    <span class="float-end">{{ round($stats->cnt) }} шт.</span>
+                    <span class="float-end">{{ floatval($stats->cnt) }} шт.</span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Текущая стоимость:</span>
-                    <span class="float-end">{{ number_format($ttlByUserAsset) }} ₽</span>
+                    <span class="float-end">
+                        @if($asset->currency == 'USD')
+                            $ {{ number_format($stats->ttl_now_rub / $usd) }}
+                        @endif
+                        @if($asset->currency == 'RUB')
+                            {{ number_format($stats->ttl_now_rub) }} ₽
+                        @endif
+                    </span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Вложено:</span>
@@ -49,24 +56,24 @@
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Доля в портфеле:</span>
-                    <span class="float-end">{{ number_format($ttlByUserAsset / $ttlByUser * 100, 2) }}%</span>
+                    <span class="float-end">{{ number_format($stats->ttl_now_rub / $ttlByUser * 100, 2) }}%</span>
                 </div>
             </div>
             <div class="col-lg-4">
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Прибыль:</span>
                     <span
-                        class="float-end {{ $ttlByUserAsset > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
-                        {{ number_format($ttlByUserAsset - $stats->ttl_spent_rub) }} ₽
-                        ( {{ number_format(($ttlByUserAsset - $stats->ttl_spent_rub) / $stats->ttl_spent_rub * 100, 2) }}% )
+                        class="float-end {{ $stats->ttl_now_rub > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
+                        {{ number_format($stats->ttl_now_rub - $stats->ttl_spent_rub) }} ₽
+                        ( {{ number_format(($stats->ttl_now_rub - $stats->ttl_spent_rub) / $stats->ttl_spent_rub * 100, 2) }}% )
                     </span>
                 </div>
                 <div class="border-bottom p-2">
                     <span class="text-muted small">Рост цены:</span>
                     <span
-                        class="float-end {{ $ttlByUserAsset > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
-                        {{ number_format($ttlByUserAsset - $stats->ttl_spent_rub) }} ₽
-                        ( {{ number_format(($ttlByUserAsset - $stats->ttl_spent_rub) / $stats->ttl_spent_rub * 100, 2) }}% )
+                        class="float-end {{ $stats->ttl_now_rub > $stats->ttl_spent_rub ? 'text-success' : 'text-danger' }}">
+                        {{ number_format($stats->ttl_now_rub - $stats->ttl_spent_rub) }} ₽
+                        ( {{ number_format(($stats->ttl_now_rub - $stats->ttl_spent_rub) / $stats->ttl_spent_rub * 100, 2) }}% )
                     </span>
                 </div>
                 <div class="border-bottom p-2">

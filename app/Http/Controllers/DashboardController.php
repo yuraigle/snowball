@@ -109,6 +109,7 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.nam
     public function asset($ticker): Factory|View|Application
     {
         $assets = DB::select("select * from `assets` where `ticker` = ?", [$ticker]);
+        $usd = DB::selectOne("select * from `assets` where `ticker` = ?", ["USDFIX"]);
 
         if (count($assets) == 1) {
             $asset = $assets[0];
@@ -119,16 +120,17 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.nam
         $tx = DB::select("select * from `user_holdings` where `user_id`=? and `asset_id`=? order by deal_date desc",
             [Auth::id(), $asset->id]);
 
-        $stats = DB::select("
+        $stats = DB::select(<<<SQL
 select sum(uh.`amount`) as cnt,
        sum(uh.`amount` * uh.price) as ttl_spent,
-       sum(uh.`amount` * uh.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_spent_rub
+       sum(uh.`amount` * uh.price) * if(a.currency = 'USD', usd.price, 1) as ttl_spent_rub,
+       sum(uh.`amount` * a.`price`) * if(a.currency = 'USD', usd.price, 1) as ttl_now_rub
 from `user_holdings` uh
     left join `assets` a on a.id = uh.asset_id
     left join `assets` usd on usd.ticker = 'USDFIX'
 where user_id = ? and asset_id = ?
 group by usd.price, a.currency
-", [Auth::id(), $asset->id]);
+SQL, [Auth::id(), $asset->id]);
 
 
         $res2 = DB::select(<<<SQL
@@ -146,29 +148,19 @@ SQL, [$asset->id]);
             'series' => $series,
             'stats' => !empty($stats) ? $stats[0] : null,
             'ttlByUser' => $this->sumByUser(Auth::id()),
-            'ttlByUserAsset' => $this->sumByUserAsset(Auth::id(), $asset->id)
+            'usd' => $usd->price,
         ]);
     }
 
     private function sumByUser($uid): float
     {
-        $r = DB::select("select sum(a.price * uh.amount * case when a.currency = 'USD' then usd.price else 1 end) as ttl
-            from user_holdings uh
-                left join `assets` a on a.id = uh.asset_id
-                left join `assets` usd on usd.ticker = 'USDFIX'
-            where uh.user_id = ?
-            ", [$uid]);
-        return !empty($r) && $r[0]->ttl ? $r[0]->ttl : 0;
-    }
-
-    private function sumByUserAsset($uid, $aid): float
-    {
-        $r = DB::select("select sum(a.price * uh.amount * case when a.currency = 'USD' then usd.price else 1 end) as ttl
-            from user_holdings uh
-                left join `assets` a on a.id = uh.asset_id
-                left join `assets` usd on usd.ticker = 'USDFIX'
-            where uh.user_id = ? and a.id = ?
-            ", [$uid, $aid]);
+        $r = DB::select(<<<SQL
+select sum(a.price * uh.amount * if(a.currency = 'USD', usd.price, 1)) as ttl
+from user_holdings uh
+    left join `assets` a on a.id = uh.asset_id
+    left join `assets` usd on usd.ticker = 'USDFIX'
+where uh.user_id = ?
+SQL, [$uid]);
         return !empty($r) && $r[0]->ttl ? $r[0]->ttl : 0;
     }
 
