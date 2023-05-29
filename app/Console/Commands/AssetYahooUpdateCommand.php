@@ -24,7 +24,7 @@ class AssetYahooUpdateCommand extends Command
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_HTTPHEADER => [
                 "accept: application/json",
-                "x-api-key: 0EkmiBCE877XGyk1mFtYS28nWZfVd9IXEHXoEm67",
+                "x-api-key: " . env("YFAPI_KEY"),
             ],
             CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_SSL_VERIFYPEER => false,
