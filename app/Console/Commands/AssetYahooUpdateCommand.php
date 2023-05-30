@@ -62,11 +62,24 @@ class AssetYahooUpdateCommand extends Command
                 continue;
             }
 
-            $s = $results[$ticker];
+//            $s = $results[$ticker];
+            $price = $results[$ticker]['regularMarketPrice'];
 
-            if ($s['regularMarketPrice']) {
+            if ($price) {
                 DB::update("update `assets` set `price`=?, `updated_at` = now() where `id`=?",
-                    [$s['regularMarketPrice'], $aid]);
+                    [$price, $aid]);
+
+                $date = date('Y-m-d');
+                $exists = DB::selectOne("select count(*) as c from `asset_history` where `asset_id` = ? and `date` = ?",
+                    [$aid, $date]);
+
+                if ($exists->c) {
+                    DB::update("update `asset_history` set `close`=?, `updated_at` = now()
+                            where `date`=? and `asset_id`=?", [$price, $date, $aid]);
+                } else {
+                    DB::insert("insert into `asset_history` (`asset_id`, `close`, `date`)
+                            values (?, ?, ?)", [$aid, $price, $date]);
+                }
             }
         }
 
