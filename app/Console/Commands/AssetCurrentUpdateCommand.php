@@ -16,11 +16,9 @@ class AssetCurrentUpdateCommand extends Command
         $links = [
             "https://iss.moex.com/iss/engines/stock/markets/shares/boards/tqbr/securities.json", // stocks
             "https://iss.moex.com/iss/engines/stock/markets/shares/boards/tqtf/securities.json", // etf
-//            "https://iss.moex.com/iss/engines/stock/markets/shares/boards/tqtd/securities.json", // etf-usd
             "https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities.json", // index
             "https://iss.moex.com/iss/engines/stock/markets/index/boards/RTSI/securities.json", // index
             "https://iss.moex.com/iss/engines/currency/markets/index/securities.json", // currency
-//            "https://iss.moex.com/iss/engines/stock/markets/bonds/boards/tqcb/securities.json", // ЗО
         ];
 
         foreach ($links as $link) {
@@ -36,6 +34,27 @@ class AssetCurrentUpdateCommand extends Command
             foreach ($resp['marketdata']['data'] as $row) {
                 $ticker = $row[$cols['SECID']];
                 $price = $row[$priceCol];
+                $results[$ticker] = $price;
+            }
+        }
+
+        $linksZo = [
+            "https://iss.moex.com/iss/engines/stock/markets/bonds/boards/tqcb/securities.json",
+        ];
+        $usd = DB::selectOne("select * from `assets` where `ticker` = ?", ["USDFIX"]);
+
+        foreach ($linksZo as $link) {
+            $resp = json_decode(file_get_contents($link), true);
+            if (!$resp || empty($resp['marketdata']) || empty($resp['marketdata']['data'])) {
+                continue;
+            }
+
+            $cols = $resp['marketdata']['columns'];
+            $cols = array_flip($cols);
+
+            foreach ($resp['marketdata']['data'] as $row) {
+                $ticker = $row[$cols['SECID']];
+                $price = $row[$cols['LCURRENTPRICE']] / 100 * 1000 * $usd->price;
                 $results[$ticker] = $price;
             }
         }
