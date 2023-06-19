@@ -67,7 +67,9 @@ SQL;
             $sumInGroup = array_reduce($stats, function ($a, $b) use ($row) {
                 return $a + ($b->parent_id == $row->parent_id ? $b->ttl_now : 0);
             });
-            $row->curr_weight = $row->ttl_now / $sumInGroup * 100;
+            if ($sumInGroup) {
+                $row->curr_weight = $row->ttl_now / $sumInGroup * 100;
+            }
 
             if (!$row->parent_id) {
                 $row->level = 1;
@@ -92,6 +94,7 @@ SQL;
         $this->allocateChildren(0, $stats, $add);
         $this->allocateChildren(24, $stats);
         $this->allocateChildren(25, $stats);
+        $this->allocateChildren(40, $stats);
         $this->allocateChildren(1, $stats);
         $this->allocateChildren(2, $stats);
         $this->allocateChildren(3, $stats);

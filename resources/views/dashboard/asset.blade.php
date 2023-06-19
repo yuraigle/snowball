@@ -98,6 +98,8 @@
         window.asset_price = {{ $asset->price }};
         window.asset_currency = @json($asset->currency);
         window.series = @json($series);
-        window.avgPrice = {{ $stats->ttl_spent / $stats->cnt }};
+        @if($stats)
+            window.avgPrice = {{ $stats->ttl_spent / $stats->cnt }};
+        @endif
     </script>
 @endsection
