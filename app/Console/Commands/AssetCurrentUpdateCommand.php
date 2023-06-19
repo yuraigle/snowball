@@ -20,6 +20,7 @@ class AssetCurrentUpdateCommand extends Command
             "https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities.json", // index
             "https://iss.moex.com/iss/engines/stock/markets/index/boards/RTSI/securities.json", // index
             "https://iss.moex.com/iss/engines/currency/markets/index/securities.json", // currency
+//            "https://iss.moex.com/iss/engines/stock/markets/bonds/boards/tqcb/securities.json", // ЗО
         ];
 
         foreach ($links as $link) {
