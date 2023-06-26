@@ -94,7 +94,7 @@ SQL;
         $this->allocateChildren(0, $stats, $add);
         $this->allocateChildren(24, $stats);
         $this->allocateChildren(25, $stats);
-        $this->allocateChildren(40, $stats);
+        $this->allocateChildren(46, $stats);
         $this->allocateChildren(1, $stats);
         $this->allocateChildren(2, $stats);
         $this->allocateChildren(3, $stats);
