@@ -24,8 +24,9 @@
                     <span class="float-end">
                         @if($asset->currency == 'USD')
                             $ {{ number_format($stats->ttl_now_rub / $usd) }}
-                        @endif
-                        @if($asset->currency == 'RUB')
+                        @elseif($asset->currency == 'CNY')
+                            ¥ {{ number_format($stats->ttl_now_rub / $cny) }}
+                        @else
                             {{ number_format($stats->ttl_now_rub) }} ₽
                         @endif
                     </span>

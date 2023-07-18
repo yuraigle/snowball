@@ -54,6 +54,7 @@
                                         :class="{ 'is-invalid': v$.currency.$errors.length }">
                                     <option value="RUB" selected>RUB</option>
                                     <option value="USD">USD</option>
+                                    <option value="CNY">CNY</option>
                                 </select>
                                 <div v-if="v$.currency.$errors.length" class="invalid-feedback">
                                     {{ v$.currency.$errors[0].$message }}
@@ -160,6 +161,8 @@ export default {
             let fmt = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'RUB'});
             if (this.currency === 'USD') {
                 fmt = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'})
+            } else if (this.currency === 'CNY') {
+                fmt = new Intl.NumberFormat('zh-CN', {style: 'currency', currency: 'CNY'})
             }
             return fmt.format(ttl);
         },
@@ -167,6 +170,8 @@ export default {
         currencySymbol() {
             if (this.currency === 'USD') {
                 return '$';
+            } else if (this.currency === 'CNY') {
+                return '¥';
             }
             return '₽';
         }

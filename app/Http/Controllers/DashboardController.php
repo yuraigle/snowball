@@ -33,8 +33,8 @@ select
     a.price,
     a.currency,
     sum(`amount`) as cnt,
-    sum(`amount` * uh.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_spent,
-    sum(`amount`) * max(a.price) * (case when a.currency = 'USD' then usd.price else 1 end) as ttl_now,
+    sum(`amount` * uh.price) * (case when a.currency = 'USD' then usd.price when a.currency = 'CNY' then cny.price else 1 end) as ttl_spent,
+    sum(`amount`) * max(a.price) * (case when a.currency = 'USD' then usd.price when a.currency = 'CNY' then cny.price else 1 end) as ttl_now,
     ah1.close as 1D,
     ah3.close as 3D,
     ah7.close as 7D,
@@ -42,6 +42,7 @@ select
 from `user_categories` uc
     left join `assets` a on a.id = uc.asset_id
     left join `assets` usd on usd.ticker = 'USDFIX'
+    left join `assets` cny on cny.ticker = 'CNYFIX'
     left join `user_holdings` uh on uh.user_id = uc.user_id and uh.asset_id = uc.asset_id
     left join (
         select asset_id, close, row_number() over(partition by asset_id order by date desc) as d
@@ -110,6 +111,7 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.nam
     {
         $assets = DB::select("select * from `assets` where `ticker` = ?", [$ticker]);
         $usd = DB::selectOne("select * from `assets` where `ticker` = ?", ["USDFIX"]);
+        $cny = DB::selectOne("select * from `assets` where `ticker` = ?", ["CNYFIX"]);
 
         if (count($assets) == 1) {
             $asset = $assets[0];
@@ -123,13 +125,14 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, a.nam
         $stats = DB::select(<<<SQL
 select sum(uh.`amount`) as cnt,
        sum(uh.`amount` * uh.price) as ttl_spent,
-       sum(uh.`amount` * uh.price) * if(a.currency = 'USD', usd.price, 1) as ttl_spent_rub,
-       sum(uh.`amount` * a.`price`) * if(a.currency = 'USD', usd.price, 1) as ttl_now_rub
+       sum(uh.`amount` * uh.price) * (case when a.currency = 'USD' then usd.price when a.currency = 'CNY' then cny.price else 1 end) as ttl_spent_rub,
+       sum(uh.`amount` * a.`price`) * (case when a.currency = 'USD' then usd.price when a.currency = 'CNY' then cny.price else 1 end) as ttl_now_rub
 from `user_holdings` uh
     left join `assets` a on a.id = uh.asset_id
     left join `assets` usd on usd.ticker = 'USDFIX'
+    left join `assets` cny on cny.ticker = 'CNYFIX'
 where user_id = ? and asset_id = ?
-group by usd.price, a.currency
+group by usd.price, cny.price, a.currency
 SQL, [Auth::id(), $asset->id]);
 
 
@@ -149,6 +152,7 @@ SQL, [$asset->id]);
             'stats' => !empty($stats) ? $stats[0] : null,
             'ttlByUser' => $this->sumByUser(Auth::id()),
             'usd' => $usd->price,
+            'cny' => $cny->price,
         ]);
     }
 

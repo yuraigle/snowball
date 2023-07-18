@@ -80,6 +80,8 @@ export default {
             let fmt = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'RUB'});
             if (c === 'USD') {
                 fmt = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'})
+            } else if (c === 'CNY') {
+                fmt = new Intl.NumberFormat('zh-CN', {style: 'currency', currency: 'CNY'})
             }
             return fmt.format(x);
         },

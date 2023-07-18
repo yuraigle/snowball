@@ -71,7 +71,7 @@ group by uc.id, uc.parent_id, uc.name, uc.target_weight, uc.ord, uc.color, uc.lo
         foreach ($newUserCats as $cc) {
             if (empty($cc['id'])) {
                 $assetId = $catName = null;
-                if (preg_match('|^[A-Z0-9]{1,12}$|', $cc['name'])) {
+                if (preg_match('|^[A-Z0-9.]{1,12}$|', $cc['name'])) {
                     $assets = DB::select("select `id` from `assets` where `ticker` = ?", [$cc['name']]);
                     if (!empty($assets)) {
                         $assetId = $assets[0]->id;

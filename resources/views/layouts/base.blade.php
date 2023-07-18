@@ -61,7 +61,7 @@
     </div>
 </nav>
 
-<main class="container mt-3">
+<main class="container pt-3 pb-5">
     @yield('content')
 </main>
 

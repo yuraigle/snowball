@@ -113,6 +113,13 @@ export default {
                     maximumFractionDigits: 4
                 })
             }
+            if (c === 'CNY') {
+                fmt = new Intl.NumberFormat('zh-CN', {
+                    style: 'currency',
+                    currency: 'CNY',
+                    maximumFractionDigits: 4
+                })
+            }
             return fmt.format(x);
         }
     }

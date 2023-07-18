@@ -12,7 +12,7 @@ class AssetYahooUpdateCommand extends Command
 
     public function handle()
     {
-        $tickers = ['VT', 'BTC-USD', 'ETH-USD', 'BNB-USD', 'MATIC-USD', 'XMR-USD', '^GSPC'];
+        $tickers = ['VT', 'BTC-USD', 'ETH-USD', 'BNB-USD', 'MATIC-USD', 'XMR-USD', '^GSPC', '83010.HK'];
         $url = 'https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=' . urlencode(join(',', $tickers));
 
         $curl = curl_init();
