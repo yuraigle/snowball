@@ -142,7 +142,9 @@ SQL, [$asset->id]);
 
         $series = [];
         foreach ($res2 as $row) {
-            $series[] = ["time" => $row->date, "value" => floatval($row->close)];
+            if ($row->close > 0) {
+                $series[] = ["time" => $row->date, "value" => floatval($row->close)];
+            }
         }
 
         return view("dashboard.asset", [
