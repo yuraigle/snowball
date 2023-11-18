@@ -19,6 +19,7 @@ class AssetCurrentUpdateCommand extends Command
             "https://iss.moex.com/iss/engines/stock/markets/index/boards/SNDX/securities.json", // index
             "https://iss.moex.com/iss/engines/stock/markets/index/boards/RTSI/securities.json", // index
             "https://iss.moex.com/iss/engines/currency/markets/index/securities.json", // currency
+            "https://iss.moex.com/iss/engines/stock/markets/bonds/boards/tqob/securities.json",
         ];
 
         foreach ($links as $link) {
@@ -34,8 +35,15 @@ class AssetCurrentUpdateCommand extends Command
             foreach ($resp['marketdata']['data'] as $row) {
                 $ticker = $row[$cols['SECID']];
                 $price = $row[$priceCol];
+
+                if (str_contains($link, "/boards/tqob/")) {
+                    $price *= 10;
+                }
+
                 $results[$ticker] = $price;
             }
+
+
         }
 
         $linksZo = [
