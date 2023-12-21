@@ -33,3 +33,4 @@ Route::get('/categories', [CategoriesController::class, 'index'])->middleware('a
 Route::post('/categories/update', [CategoriesController::class, 'update'])->middleware('auth');
 Route::get('/advice', [AdviceController::class, 'index'])->middleware('auth');
 Route::get('/stats', [HomeController::class, 'stats']);
+Route::get('/delta7', [HomeController::class, 'delta7']);

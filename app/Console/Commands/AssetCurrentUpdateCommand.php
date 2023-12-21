@@ -46,27 +46,6 @@ class AssetCurrentUpdateCommand extends Command
 
         }
 
-        $linksZo = [
-            "https://iss.moex.com/iss/engines/stock/markets/bonds/boards/tqcb/securities.json",
-        ];
-        $usd = DB::selectOne("select * from `assets` where `ticker` = ?", ["USDFIX"]);
-
-        foreach ($linksZo as $link) {
-            $resp = json_decode(file_get_contents($link), true);
-            if (!$resp || empty($resp['marketdata']) || empty($resp['marketdata']['data'])) {
-                continue;
-            }
-
-            $cols = $resp['marketdata']['columns'];
-            $cols = array_flip($cols);
-
-            foreach ($resp['marketdata']['data'] as $row) {
-                $ticker = $row[$cols['SECID']];
-                $price = $row[$cols['LCURRENTPRICE']] / 100 * 1000 * $usd->price;
-                $results[$ticker] = $price;
-            }
-        }
-
         $tickers = DB::select("select id, ticker from `assets`");
         foreach ($tickers as $row1) {
             $ticker = $row1->ticker;
