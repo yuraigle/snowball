@@ -41,15 +41,17 @@ class HomeController extends BaseController
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
         $xml .= '<ROWS>' . PHP_EOL;
 
+        $prices = [];
+        foreach ($rows as $row) {
+            $prices[$row->ticker] = (float) $row->price;
+        }
+
         foreach ($tickers as $ticker) {
-            foreach ($rows as $row) {
-                if ($row->ticker == $ticker) {
-                    $xml .= '  <ROW>';
-                    $xml .= '<TICKER>' . $row->ticker . '</TICKER>';
-                    $xml .= '<PRICE>' . (float) $row->price . '</PRICE>';
-                    $xml .= '</ROW>' . PHP_EOL;
-                }
-            }
+            $price = $prices[$ticker] ?? 0;
+            $xml .= '  <ROW>';
+            $xml .= '<TICKER>' . $ticker . '</TICKER>';
+            $xml .= '<PRICE>' . $price . '</PRICE>';
+            $xml .= '</ROW>' . PHP_EOL;
         }
 
         $xml .= '</ROWS>';
@@ -82,15 +84,17 @@ where a.ticker in (" . join(',', $params) . ")
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
         $xml .= '<ROWS>' . PHP_EOL;
 
+        $prices = [];
+        foreach ($rows as $row) {
+            $prices[$row->ticker] = (float) $row->delta7;
+        }
+
         foreach ($tickers as $ticker) {
-            foreach ($rows as $row) {
-                if ($row->ticker == $ticker) {
-                    $xml .= '  <ROW>';
-                    $xml .= '<TICKER>' . $row->ticker . '</TICKER>';
-                    $xml .= '<DELTA>' . (float) $row->delta7 . '</DELTA>';
-                    $xml .= '</ROW>' . PHP_EOL;
-                }
-            }
+            $price = $prices[$ticker] ?? 0;
+            $xml .= '  <ROW>';
+            $xml .= '<TICKER>' . $ticker . '</TICKER>';
+            $xml .= '<DELTA>' . $price . '</DELTA>';
+            $xml .= '</ROW>' . PHP_EOL;
         }
 
         $xml .= '</ROWS>';
