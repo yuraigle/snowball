@@ -4,53 +4,35 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class AssetYahooUpdateCommand extends Command
 {
     protected $signature = 'assets:yahoo';
     protected $description = 'Update current price data';
 
-    public function handle()
+    public function handle(): void
     {
-        $tickers = ['VT', 'BTC-USD', 'ETH-USD', 'BNB-USD', 'MATIC-USD', 'XMR-USD', '^GSPC', '83010.HK'];
-        $url = 'https://yfapi.net/v6/finance/quote?region=US&lang=en&symbols=' . urlencode(join(',', $tickers));
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_HTTPHEADER => [
-                "accept: application/json",
-                "x-api-key: " . env("YFAPI_KEY"),
-            ],
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_SSL_VERIFYPEER => false,
-        ]);
-
-        $resp = curl_exec($curl);
-        $err = curl_error($curl);
-
-        curl_close($curl);
-
-        if ($err) {
-            echo "cURL Error #:" . $err;
-            return;
-        }
-
+        $tickers = ['BTC-USD', 'ETH-USD', 'BNB-USD', 'MATIC-USD', 'XMR-USD', '^GSPC', '83010.HK'];
         $results = [];
-        $json = json_decode($resp, true);
 
-        foreach ($json["quoteResponse"]["result"] as $s) {
-            $ticker = preg_replace("|-USD$|", "", $s['symbol']);
+        foreach ($tickers as $ticker) {
+            $response = Http::get('https://finance.yahoo.com/quote/' . $ticker);
+            $rx = '| data-test="qsp-price" data-field="regularMarketPrice" [^>]+ value="([\d.]+)" |';
 
-            if (str_contains($ticker, "GSPC")) {
-                $ticker = "SP500";
+            if ($response->ok()) {
+                $body = $response->body();
+                if (preg_match($rx, $body, $m)) {
+                    $key = $ticker;
+                    if ($ticker === "^GSPC") {
+                        $key = "SP500";
+                    } elseif (str_contains($ticker, "-USD")) {
+                        $key = str_replace('-USD', '', $ticker);
+                    }
+
+                    $results[$key] = floatval($m[1]);
+                }
             }
-
-            $results[$ticker] = $s;
         }
 
         $tickers = DB::select("select id, ticker from `assets`");
@@ -62,8 +44,7 @@ class AssetYahooUpdateCommand extends Command
                 continue;
             }
 
-//            $s = $results[$ticker];
-            $price = $results[$ticker]['regularMarketPrice'];
+            $price = $results[$ticker];
 
             if ($price) {
                 DB::update("update `assets` set `price`=?, `updated_at` = now() where `id`=?",

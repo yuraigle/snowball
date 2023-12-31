@@ -5,9 +5,9 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class AssetYahooHistoryUpdateCommand extends Command
+class AssetYfapiHistoryUpdateCommand extends Command
 {
-    protected $signature = 'assets:history-yahoo';
+    protected $signature = 'assets:history-yfapi';
     protected $description = 'Update history price data from Yahoo Finance';
 
     public function handle() {

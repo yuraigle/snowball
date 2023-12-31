@@ -18,7 +18,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('assets:current')->everyTenMinutes();
         $schedule->command('assets:history')->everyTwoHours();
         $schedule->command('assets:yahoo')->everyThirtyMinutes(); // 48 per day
-        $schedule->command('assets:history-yahoo')->everySixHours(); // 7 assets * 4 per day
     }
 
     /**
