@@ -13,7 +13,10 @@ class AssetYahooUpdateCommand extends Command
 
     public function handle(): void
     {
-        $tickers = ['BTC-USD', 'ETH-USD', 'BNB-USD', 'MATIC-USD', 'XMR-USD', '^GSPC', '83010.HK'];
+        $tickers = [
+            'BTC-USD', 'ETH-USD', 'BNB-USD', 'MATIC-USD', 'XMR-USD', 'TRX-USD',
+            '^GSPC', '83010.HK', 'VT'
+        ];
         $results = [];
 
         foreach ($tickers as $ticker) {
