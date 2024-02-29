@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('assets:current')->everyTenMinutes();
+        $schedule->command('assets:cmc')->everyTenMinutes();
         $schedule->command('assets:history')->everyTwoHours();
         $schedule->command('assets:yahoo')->everyThirtyMinutes(); // 48 per day
     }
