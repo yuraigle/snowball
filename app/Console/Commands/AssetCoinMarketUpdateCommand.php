@@ -13,7 +13,7 @@ class AssetCoinMarketUpdateCommand extends Command
 
     public function handle(): void
     {
-        $url = "https://coinmarketcap.com/";
+        $url = "https://coinmarketcap.com/all/views/all/";
         $coins = ['BTC', 'ETH', 'BNB', 'MATIC', 'XMR', 'TRX', 'AVAX', 'SOL'];
 
         $response = Http::get($url);
@@ -24,20 +24,8 @@ class AssetCoinMarketUpdateCommand extends Command
 
         $body = $response->body();
 
-        // 1..10
-        $rx = '| data-sensors-click="true">([A-Z]{3,5})</p>.+?<span>\$([0-9.,]+)</span></a>|';
+        $rx = '|cell--sort-by__symbol"><div class="">([A-Z]{3,5})</div>.+?<span>\$([0-9.,]+)</span></a>|';
         preg_match_all($rx, $body, $m);
-        foreach ($m[1] as $id => $ticker) {
-            $price = floatval(preg_replace('/[^0-9.]/', '', $m[2][$id]));
-            if (in_array($ticker, $coins)) {
-                print_r($ticker . " " . $price . PHP_EOL);
-                $this->updateTicker($ticker, $price);
-            }
-        }
-
-        // 11..100
-        $rx2 = '|<span class="crypto-symbol">([A-Z]{3,5})</span></a></td><td>\$<!-- -->([0-9.,]+)</td>|';
-        preg_match_all($rx2, $body, $m);
         foreach ($m[1] as $id => $ticker) {
             $price = floatval(preg_replace('/[^0-9.]/', '', $m[2][$id]));
             if (in_array($ticker, $coins)) {
