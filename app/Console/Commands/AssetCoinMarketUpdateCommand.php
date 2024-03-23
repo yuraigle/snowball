@@ -13,7 +13,7 @@ class AssetCoinMarketUpdateCommand extends Command
 
     public function handle(): void
     {
-        $url = "https://coinmarketcap.com/all/views/all/";
+        $url = "https://api.coinmarketcap.com/data-api/v3/cryptocurrency/listing?start=1&limit=100";
         $coins = ['BTC', 'ETH', 'BNB', 'MATIC', 'XMR', 'TRX', 'AVAX', 'SOL'];
 
         $response = Http::get($url);
@@ -22,13 +22,11 @@ class AssetCoinMarketUpdateCommand extends Command
             return;
         }
 
-        $body = $response->body();
-
-        $rx = '|cell--sort-by__symbol"><div class="">([A-Z]{3,5})</div>.+?<span>\$([0-9.,]+)</span></a>|';
-        preg_match_all($rx, $body, $m);
-        foreach ($m[1] as $id => $ticker) {
-            $price = floatval(preg_replace('/[^0-9.]/', '', $m[2][$id]));
+        $data = $response->json();
+        foreach ($data['data']['cryptoCurrencyList'] as $c) {
+            $ticker = $c['symbol'];
             if (in_array($ticker, $coins)) {
+                $price = floatval($c['quotes'][0]['price']);
                 print_r($ticker . " " . $price . PHP_EOL);
                 $this->updateTicker($ticker, $price);
             }
